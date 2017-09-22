@@ -1,24 +1,21 @@
 'use strict';
 
-const respawn = require('respawn');
+const io = require('socket.io-client');
+let socket = io.connect('http://localhost:8801');
 
-const server = respawn(['node', 'build/index.js'], {
-	env: {
-		NODE_ENV: 'development'
-	},
-	fork: false,
-	kill: 2000,
-	maxRestarts: 0,
-	stdio: 'inherit'
+new Promise((resolve, reject) => {
+    socket.send({
+        'type': 'restart-server',
+        'bootstrap': 'build/app.js'
+    }, resolve);
+}).then(() => {
+    socket.close();
+    return new Promise((resolve, reject) => {
+        socket = io.connect('http://localhost:8802');
+        socket.send({
+            'type': 'browser-refresh'
+        }, resolve);
+    });
+}).then(() => {
+    socket.close();
 });
-
-setTimeout(() => {
-	server.stop(() => server.start());
-}, 100);
-
-server.on('start', async () => {
-	await new Promise((resolve, reject) => { setTimeout(resolve, 1000); });
-});
-
-
-
