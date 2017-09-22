@@ -1,0 +1,27 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "tsc-watch -p configs/tsconfig-server.json --onSuccess \"node ./scripts/build-script.js\""
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^8.0.29",
+    "browser-refresh": "^1.7.2",
+    "cote": "^0.15.1",
+    "lite-server": "^2.3.0",
+    "node-cmd": "^3.0.0",
+    "node-typescript-compiler": "^1.1.1",
+    "respawn": "^2.5.0",
+    "tsc-watch": "^1.0.8",
+    "typescript": "^2.5.2"
+  },
+  "dependencies": {
+    "@types/fs-extra": "^4.0.2",
+    "fs-extra": "^4.0.2"
+  }
+}
