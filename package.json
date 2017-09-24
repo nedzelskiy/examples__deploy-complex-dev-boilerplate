@@ -5,17 +5,26 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "sh scripts/server.sh"
+    "start": "echo \"\"",
+    "dev:server": "sh scripts/server.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nedzelskiy/examples__project-dev-boilerplate.git"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/chalk": "^0.4.31",
     "@types/node": "^8.0.29",
     "@types/socket.io": "^1.4.30",
+    "chalk": "^2.1.0",
     "respawn": "^2.5.0",
     "socket.io": "^2.0.3",
+    "socket.io-client": "^2.0.3",
     "tsc-watch": "^1.0.8",
-    "typescript": "^2.5.2"
+    "typescript": "^2.5.2",
+    "util": "^0.10.3"
   },
   "dependencies": {
     "@types/fs-extra": "^4.0.2",
