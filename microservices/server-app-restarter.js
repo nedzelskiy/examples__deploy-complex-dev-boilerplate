@@ -27,7 +27,7 @@ const sendConsoleText = (text, level) => {
 };
 
 io.on('connection', (socket) => {
-    socket.on('message', async (message, cb) => {
+    socket.on('message', (message, cb) => {
         types[message.type] &&
         types[message.type](message.bootstrap)
         .then(() => {
@@ -55,7 +55,7 @@ const createAppServer = (bootstrap) => {
     });
 };
 
-types['restart-app-server'] = async (bootstrap) => {
+types['restart-app-server'] = (bootstrap) => {
     return new Promise((resolve, reject) => {
         !appServer && createAppServer(bootstrap);
         appServer.stop(() => {
@@ -65,12 +65,12 @@ types['restart-app-server'] = async (bootstrap) => {
     });
 };
 
-types['set-app-server'] = async (bootstrap) => {
+types['set-app-server'] = (bootstrap) => {
     createAppServer(bootstrap);
     return Promise.resolve();
 };
 
-types['delete-app-server'] = async () => {
+types['delete-app-server'] = () => {
     appServer = null;
     return Promise.resolve();
 };

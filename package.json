@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "echo \"\"",
-    "dev:server": "sh scripts/server.sh"
+    "dev:server": "sh scripts/server.sh",
+    "dev:server:compile": "node node_modules/typescript/bin/tsc -p configs/tsconfig-server.json",
+    "dev:server:compile-watch": "node node_modules/typescript/bin/tsc -w -p configs/tsconfig-server.json"
   },
   "repository": {
     "type": "git",
@@ -16,7 +18,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/chalk": "^0.4.31",
-    "@types/node": "^8.0.29",
+    "@types/node": "^8.0.30",
     "@types/socket.io": "^1.4.30",
     "chalk": "^2.1.0",
     "respawn": "^2.5.0",

@@ -6,18 +6,15 @@ import makeResponseText from './modules/makeResponseText';
 const server = http.createServer();
 const debug = (process.env.NODE_ENV === 'production') ? false : true;
 
-server.on('request', async (req, res) => {
+server.on('request', (req, res) => {
 	res.setStatus = 200;
 	if (debug) {
 		res.setHeader('Content-Type', 'text/html');
 		const clientReloadScriptMaker = require('../scripts/build-client-reload-script');
-		await clientReloadScriptMaker.buildHtmlScript()
-		.then((clientReloadScript: string) => {
-			res.end(`
-				${ clientReloadScript }
-				${ makeResponseText() }
-		 	`);
-		});
+		res.end(`
+			${ clientReloadScriptMaker.buildHtmlScript() }
+			${ makeResponseText() }
+		`);
 	} else {
 		res.setHeader('Content-Type', 'text/plain');
 		res.end(makeResponseText());

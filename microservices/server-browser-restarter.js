@@ -9,7 +9,7 @@ const COLOR = process.env.SBR_COLOR || 'magenta';
 const io = require('socket.io')(PORT);
 const chalk = new chalkInstance.constructor({enabled:true});
 
-let socketToBrowser = null;
+let socketsToBrowsers = {};
 
 const sendConsoleText = (text, level) => {
     let textColor = '',
@@ -25,15 +25,21 @@ const sendConsoleText = (text, level) => {
 };
 
 const setSocketToBrowser = (socket) => {
-    socket.handshake.headers.origin &&
-        ('node-XMLHttpRequest' !== socket.handshake.headers['user-agent']) &&
-            (socketToBrowser = socket) &&
-                sendConsoleText('connected to socked browser!');
+    socketsToBrowsers[socket.id] = socket;
+};
+
+const isThisSocketToBrowser = (socket) => {
+    return (socket.handshake.headers.origin &&
+                ('node-XMLHttpRequest' !== socket.handshake.headers['user-agent'])
+            ) ? true : false;
 };
 
 io.on('connection', (socket) => {
-    setSocketToBrowser(socket);
-    socket.on('message', async (message, cb) => {
+    isThisSocketToBrowser(socket) &&
+        setSocketToBrowser(socket) &&
+            sendConsoleText('connected to socked browser!');
+    
+    socket.on('message', (message, cb) => {
         types[message.type] &&
         types[message.type](socket)
         .then(() => {
@@ -41,18 +47,25 @@ io.on('connection', (socket) => {
         })
         .catch((err) => sendConsoleText(err, 'error'));
     });
+    socket.on('close', () => {
+        delete socketsToBrowsers[socket.id];
+    });
+    socket.on('disconnect', () => {
+        delete socketsToBrowsers[socket.id];
+    });
 });
+
 
 sendConsoleText(`started on ${PORT}`);
 
-types['browser-refresh'] = async () => {
-    if (!socketToBrowser) {
-        return Promise.reject('socketToBrowser doesn\'t exists yet!')
+types['browser-refresh'] = () => {
+    let isAnySocketsExists = false;
+    for (let key in socketsToBrowsers) {
+        socketsToBrowsers[key] &&
+            (isAnySocketsExists = true) &&
+                socketsToBrowsers[key].send({ type: 'browser-refresh' }) &&
+                    sendConsoleText(`refreshed browser on ${ new Date() }`);
     }
-    socketToBrowser.send({
-        type: 'browser-refresh'
-    });
-    sendConsoleText(`refreshed browser on ${ new Date() }`);
-    return Promise.resolve();
+    return isAnySocketsExists ? Promise.resolve() : Promise.reject('socketToBrowser doesn\'t exists yet!');
 };
 
