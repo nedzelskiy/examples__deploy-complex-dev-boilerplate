@@ -4,7 +4,7 @@ import * as http from 'http';
 import makeResponseText from './modules/makeResponseText';
 
 const server = http.createServer();
-const debug = (process.env.NODE_ENV === 'production') ? false : true;
+const debug = ((process.env as any).NODE_ENV === 'production') ? false : true;
 
 server.on('request', (req, res) => {
 	res.setStatus = 200;

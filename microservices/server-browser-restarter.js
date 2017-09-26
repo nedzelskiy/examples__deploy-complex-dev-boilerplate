@@ -38,7 +38,7 @@ io.on('connection', (socket) => {
     isThisSocketToBrowser(socket) &&
         setSocketToBrowser(socket) &&
             sendConsoleText('connected to socked browser!');
-    
+
     socket.on('message', (message, cb) => {
         types[message.type] &&
         types[message.type](socket)
