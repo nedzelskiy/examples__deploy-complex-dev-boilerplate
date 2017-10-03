@@ -1,25 +1,37 @@
 'use strict';
 
-const APP_BOOTSTRAP = process.env.APP_BOOTSTRAP || 'build/app.js';
+const request = require('request');
+
 const URL_APP_RELOAD_SERVER = process.env.URL_APP_RELOAD_SERVER || 'http://localhost:8801';
 const URL_BROWSER_RELOAD_SERVER = process.env.URL_BROWSER_RELOAD_SERVER || 'http://localhost:8802';
 
-const io = require('socket.io-client');
-let socket = io.connect(URL_APP_RELOAD_SERVER);
+const handleResponse = (resolve, reject, error, response, body) => {
+    error && reject(error);
+    (response.statusCode !== 200) && reject({
+        body: body,
+        response: response
+    });
+    resolve();
+};
 
 new Promise((resolve, reject) => {
-    socket.send({
-        'type': 'restart-app-server',
-        'bootstrap': APP_BOOTSTRAP
-    }, resolve);
-}).then(() => {
-    socket.close();
+    request(
+        {
+            uri: URL_APP_RELOAD_SERVER,
+            headers: {'socket-control-command': 'restart-app-server'}
+        },
+        handleResponse.bind(this, resolve, reject)
+    );
+})
+.then(() => {
     return new Promise((resolve, reject) => {
-        socket = io.connect(URL_BROWSER_RELOAD_SERVER);
-        socket.send({
-            'type': 'browser-refresh'
-        }, resolve);
+        request(
+            {
+                uri: URL_BROWSER_RELOAD_SERVER,
+                headers: {'socket-control-command': 'browser-refresh'}
+            },
+            handleResponse.bind(this, resolve, reject)
+        );
     });
-}).then(() => {
-    socket.close();
-});
+})
+.catch(err => console.error(err));
