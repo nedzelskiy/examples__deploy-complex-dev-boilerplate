@@ -3,9 +3,7 @@
 const types = {};
 const http = require('http');
 const server = http.createServer();
-const chalkInstance = require('chalk');
 const util = require('./microservices-utils');
-const chalk = new chalkInstance.constructor({enabled:true});
 
 const NAME = 'server-browser-restarter';
 const PORT = process.env.SBR_PORT || 8802;
@@ -33,6 +31,7 @@ const isThisSocketToBrowser = (socket) => {
             ) ? true : false;
 };
 
+// TODO i don't see 'connected to socked browser!'
 io.on('connection', (socket) => {
     isThisSocketToBrowser(socket) &&
         setSocketToBrowser(socket) &&
@@ -40,7 +39,7 @@ io.on('connection', (socket) => {
 
     socket.on('message', (message, cb) => {
         types[message.type] &&
-        types[message.type](socket)
+        types[message.type]()
         .then(() => {
             cb && ('function' === typeof cb) && cb();
         })

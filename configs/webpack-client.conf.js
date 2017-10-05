@@ -2,11 +2,12 @@
 
 const webpack = require('webpack');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const WebpackShellPlugin = require('webpack-shell-plugin');
 
 module.exports = {
-    entry: '../src/client/client.tsx',
+    entry: './src/client/client.tsx',
     output: {
-        path: __dirname + `/../build/assets/`,
+        path: __dirname + `/../build/client/`,
         filename: 'client-bundle.js',
         library: 'App'
     },
@@ -18,10 +19,15 @@ module.exports = {
         extensions: [".tsx", ".ts", ".js"]
     },
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.tsx?$/,
-                loader: 'ts-loader',
+                use: {
+                    loader: 'ts-loader',
+                    options: {
+                        configFile: "../../configs/tsconfig-client.json"
+                    }
+                },
                 exclude: /node_modules/
             },
             {
@@ -35,7 +41,10 @@ module.exports = {
     },
     plugins: [
         new ExtractTextPlugin({
-            filename: "client.css"
+            filename: "client-bundle.css"
+        }),
+        new WebpackShellPlugin({
+            onBuildExit:['node ./scripts/build-client-script.js']
         })
     ],
     devtool: 'source-map'

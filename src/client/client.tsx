@@ -1,14 +1,14 @@
 'use strict';
 
-import React from 'react';
+import * as React from 'react';
 import store from './store';
-import ReactDOM from 'react-dom';
+import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
+import Root from './components/Root/src';
 
 ReactDOM.render(
     <Provider store = {store}>
-        <div>Hello</div>
+        <Root />
     </Provider>,
     document.querySelector('#root')
 );
-

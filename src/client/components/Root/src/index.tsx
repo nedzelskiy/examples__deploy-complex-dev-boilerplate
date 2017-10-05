@@ -1,19 +1,26 @@
 'use strict';
 
-import React from 'react';
-import {connect} from 'react-redux';
+import * as React from 'react';
+import { connect } from 'react-redux';
+import { getCurrentDate } from './actions';
+import Counter from '../../Counter/src';
 
-const Root: React.StatelessComponent<any> = (props): JSX.Element => (
-    <h4>{ props.message }</h4>
-    <button></button>
+export const Root: React.StatelessComponent<any> = (props): JSX.Element => (
+    <div>
+        { (() => {(window as any).props = props; (window as any).t = Root })() }
+        <h4>{ props.message }</h4>
+        <div>{ props.date.toString() }</div>
+        <Counter />
+    </div>
 );
 
 const mapDispatchToProps = (dispatch: any) => ({
-
+    getCurrentDate: getCurrentDate.bind({ dispatch: dispatch })
 });
 
 const mapStateToProps = (state: any) => ({
-    message: 'Hello world!'
+    message: 'This is a counter for presentation Rect boilerplate',
+    date: state.Root
 });
 
 export default connect<any, any, {}>(mapStateToProps, mapDispatchToProps)(Root);

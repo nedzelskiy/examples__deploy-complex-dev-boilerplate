@@ -20,7 +20,7 @@ serverBrowserRestarter.on('connect', () => {
 });
 
 serverBrowserRestarter.on('reconnect', (attemptNumber) => {
-    console.log(`reconnected after ${ attemptNumber }!`);
+    console.log(`reconnected after ${ attemptNumber } attempts!`);
     serverBrowserRestarter.send({
         'type': 'browser-refresh'
     });
