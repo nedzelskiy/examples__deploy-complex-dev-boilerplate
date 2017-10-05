@@ -1,17 +1,17 @@
 {
 	"compilerOptions": {
+		"sourceMap": true,
 		"noImplicitAny": true,
-		"moduleResolution": "node",
+		"moduleResolution": "es6",
 		"module": "commonjs",
 		"removeComments": true,
-		"target": "es6",
+		"target": "es5",
+		"jsx" :  "react",
 		"allowJs": true,
-		"outDir": "../build",
-		"sourceMap": true,
 		"strictNullChecks": true,
 		"typeRoots": [
-			"../node_modules/@types",
-			"../@types"
+			"node_modules/@types",
+			"@types"
 		],
 		"lib": [
 			"dom",
@@ -21,6 +21,6 @@
 		]
 	},
 	"include": [
-		"../src/server/**/*.ts"
+		"../src/client/**/*.ts"
 	]
 }

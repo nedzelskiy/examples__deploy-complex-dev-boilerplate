@@ -20,5 +20,5 @@ server.on('request', (req, res) => {
 		res.end(makeResponseText());
 	}
 }).listen(6766, () => {
-	console.log(`Server is running on 6766! ${new Date()}`);
+	console.log(`Server is running on http://localhost:6766! ${new Date()}`);
 });

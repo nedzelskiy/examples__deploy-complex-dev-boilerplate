@@ -1,5 +1,6 @@
 #!/bin/bash
 export \
+SAR_BOOTSTRAP='build/server.js' \
 SAR_PORT=6601 \
 SBR_PORT=6602 \
 URL_APP_RELOAD_SERVER='http://localhost:6601' \
