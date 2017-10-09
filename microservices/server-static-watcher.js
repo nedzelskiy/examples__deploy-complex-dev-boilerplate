@@ -46,7 +46,8 @@ const doCopyFiles = () => {
                 request(
                     {
                         uri: URL_BROWSER_RELOAD_SERVER,
-                        headers: {'socket-control-command': 'browser-refresh'}
+                        headers: {'socket-control-command': 'browser-refresh'},
+                        proxy: ''
                     },
                     (error, response, body) => {
                         if (error) {
@@ -96,7 +97,8 @@ io.on('connection', (socket) => {
                     request(
                         {
                             uri: URL_BROWSER_RELOAD_SERVER,
-                            headers: {'socket-control-command': 'browser-refresh'}
+                            headers: {'socket-control-command': 'browser-refresh'},
+                            proxy: ''
                         },
                         (error, response, body) => {
                             if (error) {

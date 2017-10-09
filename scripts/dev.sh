@@ -8,8 +8,8 @@ SERVER_SRC_FOLDER='src/server' \
 URL_APP_RELOAD_SERVER='http://localhost:6601' \
 URL_BROWSER_RELOAD_SERVER='http://localhost:6602' \
 && \
-node_modules/concurrently/src/main.js  \
-"node_modules/webpack/bin/webpack.js --config ./configs/webpack-client.conf.js" \
+node node_modules/concurrently/src/main.js  \
+"node node_modules/webpack/bin/webpack.js --config ./configs/webpack-client.conf.js" \
 "node microservices/server-app-restarter.js" \
 "node microservices/server-static-watcher.js" \
 "node microservices/server-browser-restarter.js" \

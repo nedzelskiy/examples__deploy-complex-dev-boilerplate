@@ -7,7 +7,8 @@ new Promise((resolve, reject) => {
     request(
         {
             uri: URL_BROWSER_RELOAD_SERVER,
-            headers: {'socket-control-command': 'browser-refresh'}
+            headers: {'socket-control-command': 'browser-refresh'},
+            proxy: ''
         },
         (error, response, body) => {
             if (error) {

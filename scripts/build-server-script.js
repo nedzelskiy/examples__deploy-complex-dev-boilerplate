@@ -32,7 +32,8 @@ new Promise((resolve, reject) => {
         request(
             {
                 uri: URL_APP_RELOAD_SERVER,
-                headers: {'socket-control-command': 'restart-app-server'}
+                headers: {'socket-control-command': 'restart-app-server'},
+                proxy: ''
             },
             handleResponse.bind(this, resolve, reject)
         );
@@ -43,7 +44,8 @@ new Promise((resolve, reject) => {
         request(
             {
                 uri: URL_BROWSER_RELOAD_SERVER,
-                headers: {'socket-control-command': 'browser-refresh'}
+                headers: {'socket-control-command': 'browser-refresh'},
+                proxy: ''
             },
             handleResponse.bind(this, resolve, reject)
         );
