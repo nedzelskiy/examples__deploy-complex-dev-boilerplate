@@ -33,9 +33,10 @@ const isThisSocketToBrowser = (socket) => {
 
 // TODO i don't see 'connected to socked browser!'
 io.on('connection', (socket) => {
-    isThisSocketToBrowser(socket) &&
-        setSocketToBrowser(socket) &&
-            sendConsoleText('connected to socked browser!');
+    if (isThisSocketToBrowser(socket)) {
+        setSocketToBrowser(socket);
+        sendConsoleText(`connected to socked browser[${socket.id}]!`);
+    }
 
     socket.on('message', (message, cb) => {
         types[message.type] &&
@@ -47,9 +48,11 @@ io.on('connection', (socket) => {
     });
     socket.on('close', () => {
         delete socketsToBrowsers[socket.id];
+        sendConsoleText(`browser connection[${socket.id}] closed!`);
     });
     socket.on('disconnect', () => {
         delete socketsToBrowsers[socket.id];
+        sendConsoleText(`browser connection[${socket.id}] closed!`);
     });
 });
 
@@ -58,11 +61,12 @@ sendConsoleText(`started on ${PORT}`);
 types['browser-refresh'] = () => {
     let isAnySocketsExists = false;
     for (let key in socketsToBrowsers) {
-        socketsToBrowsers[key] &&
-            socketsToBrowsers.hasOwnProperty(key) &&
-                (isAnySocketsExists = true) &&
-                    socketsToBrowsers[key].send({ type: 'browser-refresh' }) &&
-                        sendConsoleText(`refreshed browser on ${ new Date() }`);
+        if (!socketsToBrowsers[key] || !socketsToBrowsers.hasOwnProperty(key)) {
+            continue;
+        }
+        isAnySocketsExists = true;
+        socketsToBrowsers[key].send({ type: 'browser-refresh' });
+        sendConsoleText(`refreshed browser [${key}] on ${ new Date() }`);
     }
     return isAnySocketsExists ? Promise.resolve() : Promise.reject('socketToBrowser doesn\'t exists yet!');
 };
