@@ -9,4 +9,4 @@ URL_BROWSER_RELOAD_SERVER='http://localhost:6602' \
 node node_modules/concurrently/src/main.js  \
 "node microservices/server-app-restarter.js" \
 "node microservices/server-browser-restarter.js" \
-"node node_modules/tsc-watch/tsc-watch.js -p configs/tsconfig-server.json --onSuccess 'node ./scripts/build-server-script.js'"
+"node node_modules/tsc-watch/tsc-watch.js -p configs/tsconfig-server.json --onSuccess \"node ./scripts/build-server-script.js\""
