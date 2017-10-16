@@ -19,7 +19,7 @@ const mapDispatchToProps = (dispatch: any) => ({
 });
 
 const mapStateToProps = (state: any) => ({
-    message: 'This is a counter for presentation Rect boilerplate',
+    message: 'This is a counter for presentation of Rect boilerplate',
     date: state.Root
 });
 

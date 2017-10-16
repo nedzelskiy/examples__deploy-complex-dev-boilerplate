@@ -8,7 +8,7 @@ const utils = require('./microservices-utils');
 
 const NAME = 'server-app-restarter';
 const PORT = process.env.SAR_PORT || 8801;
-const COLOR = process.env.SAR_COLOR || 'magenta';
+const COLOR = process.env.SAR_COLOR || 'cyan';
 const BOOTSTRAP = process.env.SAR_BOOTSTRAP || 'build/server.js';
 const TIME_FOR_WAIT_AFTER_SERVER_STARTED = process.env.SAR_TFWASS || 500;
 const ctx = {

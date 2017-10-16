@@ -20,12 +20,9 @@ server.on('request', (req, res) => {
 	res.setHeader('Content-Type', 'text/html');
 	if (debug) {
 		const clientReloadScriptMaker = require('../scripts/build-client-reload-script');
-		res.end(`
-			${ fs.readFileSync(`${__dirname}/index.html`, 'utf-8') } 
-			${ clientReloadScriptMaker.buildHtmlScript() }
-		`);
-		return;
+		res.write(clientReloadScriptMaker.buildHtmlScript());
 	}
+	res.write(`Server-side render: ${makeResponseText()}`);
 	res.end(fs.readFileSync(__dirname + '/index.html', 'utf-8'));
 }).listen(6766, () => {
 	console.log(`Server is running on http://localhost:6766! ${new Date()}`);

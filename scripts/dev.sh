@@ -3,6 +3,8 @@ export \
 SAR_BOOTSTRAP='build/server.js' \
 SAR_PORT=6601 \
 SBR_PORT=6602 \
+SSW_PORT=6603 \
+SSW_SUCCESS_CALLBACK='node scripts/request-refresh-browser-script.js' \
 SERVER_BUILD_FOLDER='build' \
 SERVER_SRC_FOLDER='src/server' \
 URL_APP_RELOAD_SERVER='http://localhost:6601' \

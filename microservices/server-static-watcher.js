@@ -6,6 +6,7 @@ const fse = require('fs-extra');
 const http = require('http');
 const request = require('request');
 const server = http.createServer();
+const { exec } = require('child_process');
 const Watcher = require('watch-fs').Watcher;
 const util = require('./microservices-utils');
 const recursive = require("recursive-readdir");
@@ -13,10 +14,10 @@ const recursive = require("recursive-readdir");
 
 const NAME = 'server-static-watcher';
 const PORT = process.env.SSW_PORT || 8803;
-const COLOR = process.env.SSW_COLOR || 'green';
-const DESTINATION = process.env.SERVER_BUILD_FOLDER || 'build';
-const BOOTSTRAP = process.env.SERVER_SRC_FOLDER || 'src/server';
-const URL_BROWSER_RELOAD_SERVER = process.env.URL_BROWSER_RELOAD_SERVER || 'http://localhost:8802';
+const COLOR = process.env.SSW_COLOR || 'yellow';
+const DESTINATION = process.env.SERVER_BUILD_FOLDER;
+const BOOTSTRAP = process.env.SERVER_SRC_FOLDER;
+const ON_SUCCESS_CALLBACK = process.env.SSW_SUCCESS_CALLBACK;
 
 const ctx = {
     'name': NAME,
@@ -29,7 +30,7 @@ const sendConsoleText = util.sendConsoleText.bind(ctx);
 server.on('request', util.httpServerHandler.bind(ctx));
 server.listen(PORT);
 
-var watcher = new Watcher({
+const watcher = new Watcher({
     paths: [ BOOTSTRAP ],
     filters: {
         includeFile: function(name) {
@@ -38,50 +39,20 @@ var watcher = new Watcher({
     }
 });
 
-const doCopyFiles = () => {
-    types['copy-server-static']()
-        .then((files) => {
-            sendConsoleText(`static files copied! ${files.toString()}`);
-            return new Promise((resolve, reject) => {
-                request(
-                    {
-                        uri: URL_BROWSER_RELOAD_SERVER,
-                        headers: {'socket-control-command': 'browser-refresh'},
-                        proxy: ''
-                    },
-                    (error, response, body) => {
-                        if (error) {
-                            reject(error);
-                            return;
-                        }
-                        if (response.statusCode !== 200) {
-                            reject({
-                                body: body,
-                                response: response
-                            });
-                            return;
-                        }
-                        resolve();
-                    }
-                );
-            });
-        })
-        .catch(err => sendConsoleText(err, 'error'));
-};
 
 watcher.on('create', (name) => {
     sendConsoleText(`file ${name} created`);
-    doCopyFiles();
+    types['copy-server-static'](name);
 });
 
 watcher.on('change', (name) => {
     sendConsoleText(`file ${name} changed`);
-    doCopyFiles();
+    types['copy-server-static'](name);
 });
 
 watcher.on('delete', (name) => {
     sendConsoleText(`file ${name} deleted`);
-    doCopyFiles();
+    deleteFile(name);
 });
 
 watcher.start((err, failed) => {});
@@ -91,32 +62,6 @@ io.on('connection', (socket) => {
     socket.on('message', (message, cb) => {
         types[message.type] &&
         types[message.type]()
-            .then((files) => {
-                sendConsoleText(`static files copied! ${files.toString()}`);
-                return new Promise((resolve, reject) => {
-                    request(
-                        {
-                            uri: URL_BROWSER_RELOAD_SERVER,
-                            headers: {'socket-control-command': 'browser-refresh'},
-                            proxy: ''
-                        },
-                        (error, response, body) => {
-                            if (error) {
-                                reject(error);
-                                return;
-                            }
-                            if (response.statusCode !== 200) {
-                                reject({
-                                    body: body,
-                                    response: response
-                                });
-                                return;
-                            }
-                            resolve();
-                        }
-                    );
-                });
-            })
             .then(() => {
                 cb && ('function' === typeof cb) && cb();
             })
@@ -124,34 +69,92 @@ io.on('connection', (socket) => {
     });
 });
 
+const blockedExt = [
+    'ts',
+    'tsx'
+];
+
+const deleteFile = (fileName) => {
+    fse.remove(fileName.replace(BOOTSTRAP, DESTINATION))
+        .catch(err => {
+            sendConsoleText(err, 'error');
+        });
+};
+
+const copyFile = (fileName) => {
+    let ext = fileName.split('.').pop();
+    fse.outputFileSync(fileName.replace(BOOTSTRAP, DESTINATION), fs.readFileSync(fileName, 'utf-8'));
+    return Promise.resolve([fileName]);
+};
+
+const copyAllFiles = () => {
+    return new Promise((resolve, reject) => {
+        recursive(
+            BOOTSTRAP,
+            [
+                (fileName, stats) => {
+                    let ext = fileName.split('.').pop();
+                    return !stats.isDirectory() && blockedExt.reduce((bool, extension) => {
+                        return extension === ext ? !!(++bool) : !!bool
+                    }, false);
+                }
+            ],
+            (err, files) => {
+                if (err) {
+                    reject(err);
+                    return false;
+                }
+                files.forEach(fileName => {
+                    fse.outputFileSync(fileName.replace(BOOTSTRAP, DESTINATION), fs.readFileSync(fileName, 'utf-8'));
+                });
+                resolve(files);
+            }
+        );
+    });
+};
+
 sendConsoleText(`started on ${PORT}`);
-// TODO copy only changed file or all if not
-// TODO settimeout promise !
-types['copy-server-static'] = () => {
+
+types['copy-server-static'] = (fileName) => {
+    if (!DESTINATION) {
+        let mess = 'DESTINATION not setted!';
+        sendConsoleText(mess, 'error');
+        return Promise.reject(mess);
+    }
+    if (!BOOTSTRAP) {
+        let mess = 'BOOTSTRAP not setted!';
+        sendConsoleText(mess, 'error');
+        return Promise.reject(mess);
+    }
     if (!types['copy-server-static'].promise) {
         types['copy-server-static'].promise =
         new Promise((resolve, reject) => {
-            recursive(
-                BOOTSTRAP,
-                [
-                    (file, stats) => {
-                        let ext = file.split('.').pop();
-                        return !stats.isDirectory() &&  (ext === 'ts' || ext === 'tsx');
+            let promise_ = (fileName) ? copyFile(fileName) : copyAllFiles();
+            promise_
+                .then((files)=> {
+                    setTimeout(() => {
+                        delete types['copy-server-static'].promise
+                    }, 0);
+                    sendConsoleText(`static files copied! ${files.toString()}`);
+                    if (ON_SUCCESS_CALLBACK) {
+                        sendConsoleText(`starting callback task "${ON_SUCCESS_CALLBACK}" ...`);
+                        exec(ON_SUCCESS_CALLBACK, (error, stdout, stderr) => {
+                            if (error) {
+                                reject(error);
+                                return;
+                            }
+                            resolve();
+                        });
+                    } else {
+                        resolve();
                     }
-                ],
-                (err, files) => {
-                    if (err) {
-                        setTimeout(() => { delete types['copy-server-static'].promise }, 0);
-                        reject(err);
-                        return false;
-                    }
-                    files.forEach(file => {
-                        fse.outputFileSync(file.replace(BOOTSTRAP, DESTINATION), fs.readFileSync(file, 'utf-8'));
-                    });
-                    setTimeout(() => { delete types['copy-server-static'].promise }, 0);
-                    resolve(files);
-                }
-            );
+                })
+                .catch(err => {
+                    setTimeout(() => {
+                        delete types['copy-server-static'].promise
+                    }, 0);
+                    reject(err);
+                });
         });
     }
     return types['copy-server-static'].promise;
@@ -160,3 +163,5 @@ types['copy-server-static'] = () => {
 types['get-commands'] = () => {
     return Promise.resolve(Object.keys(types).filter(command => command !== 'get-commands' ));
 };
+
+types['copy-server-static']();

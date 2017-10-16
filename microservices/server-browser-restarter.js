@@ -59,16 +59,24 @@ io.on('connection', (socket) => {
 sendConsoleText(`started on ${PORT}`);
 
 types['browser-refresh'] = () => {
-    let isAnySocketsExists = false;
-    for (let key in socketsToBrowsers) {
-        if (!socketsToBrowsers[key] || !socketsToBrowsers.hasOwnProperty(key)) {
-            continue;
-        }
-        isAnySocketsExists = true;
-        socketsToBrowsers[key].send({ type: 'browser-refresh' });
-        sendConsoleText(`refreshed browser [${key}] on ${ new Date() }`);
+    if (!types['browser-refresh'].promise) {
+        types['browser-refresh'].promise = new Promise((resolve, reject) => {
+            let isAnySocketsExists = false;
+            for (let key in socketsToBrowsers) {
+                if (!socketsToBrowsers[key] || !socketsToBrowsers.hasOwnProperty(key)) {
+                    continue;
+                }
+                isAnySocketsExists = true;
+                socketsToBrowsers[key].send({ type: 'browser-refresh' });
+                sendConsoleText(`refreshed browser [${key}] on ${ new Date() }`);
+            }
+            setTimeout(() => {
+                types['browser-refresh'].promise = null;
+            }, 0);
+            isAnySocketsExists ? resolve() : reject('socketToBrowser doesn\'t exists yet!');
+        });
     }
-    return isAnySocketsExists ? Promise.resolve() : Promise.reject('socketToBrowser doesn\'t exists yet!');
+    return types['browser-refresh'].promise;
 };
 
 types['get-commands'] = () => {
