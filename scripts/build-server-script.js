@@ -22,22 +22,14 @@ const handleResponse = (resolve, reject, error, response, body) => {
 };
 
 new Promise((resolve, reject) => {
-    let read = fs.createReadStream(`./src/server/index.html`, 'utf-8');
-    let write = fs.createWriteStream(`./build/index.html`, 'utf-8');
-    write.on('end', resolve).on('close', resolve).on('error', err => console.log(err));
-    read.pipe(write);
-})
-.then(() => {
-    return new Promise((resolve, reject) => {
-        request(
-            {
-                uri: URL_APP_RELOAD_SERVER,
-                headers: {'socket-control-command': 'restart-app-server'},
-                proxy: ''
-            },
-            handleResponse.bind(this, resolve, reject)
-        );
-    });
+    request(
+        {
+            uri: URL_APP_RELOAD_SERVER,
+            headers: {'socket-control-command': 'restart-app-server'},
+            proxy: ''
+        },
+        handleResponse.bind(this, resolve, reject)
+    );
 })
 .then(() => {
     return new Promise((resolve, reject) => {

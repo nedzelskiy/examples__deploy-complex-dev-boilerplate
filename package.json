@@ -51,5 +51,9 @@
     "watch-fs": "0.0.7",
     "webpack": "^3.6.0",
     "webpack-shell-plugin": "^0.5.0"
+  },
+  "dependencies": {
+    "@types/ejs": "^2.3.33",
+    "ejs": "^2.5.7"
   }
 }
