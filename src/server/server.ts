@@ -21,10 +21,10 @@ server.on('request', (req, res) => {
 		return false;
 	}
 	res.setHeader('Content-Type', 'text/html');
-	if (debug) {
-		const clientReloadScriptMaker = require('../scripts/build-client-reload-script');
-		res.write(clientReloadScriptMaker.buildHtmlScript());
-	}
+	// if (debug) {
+	// 	const clientReloadScriptMaker = require('../scripts/build-client-reload-script');
+	// 	res.write(clientReloadScriptMaker.buildHtmlScript());
+	// }
 	let html = ejs.render(fs.readFileSync(__dirname + '/index.ejs', 'utf-8').toString(), {});
 	res.end(html);
 }).listen(6766, () => {

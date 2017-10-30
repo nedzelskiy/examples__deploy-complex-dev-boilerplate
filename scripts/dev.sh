@@ -6,6 +6,7 @@ SBR_PORT=6602 \
 SSW_PORT=6603 \
 SSW_SUCCESS_CALLBACK='node scripts/request-refresh-browser-script.js' \
 SERVER_BUILD_FOLDER='build' \
+INDEX_FILE_NAME='index.ejs' \
 SERVER_SRC_FOLDER='src/server' \
 URL_APP_RELOAD_SERVER='http://localhost:6601' \
 URL_BROWSER_RELOAD_SERVER='http://localhost:6602' \
