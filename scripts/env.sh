@@ -1,3 +1,4 @@
+#!/bin/bash
 export \
 SERVER_PORT=6655 \
 SERVER_DOMAIN_NAME='localhost' \
