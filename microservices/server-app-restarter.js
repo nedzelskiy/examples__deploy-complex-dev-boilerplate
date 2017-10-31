@@ -6,22 +6,34 @@ const respawn = require('respawn');
 const server = http.createServer();
 const utils = require('./microservices-utils');
 
+const CONSTANTS = {
+    PORT:                               process.env.SERVER_APP_RESTARTER__PORT,
+    COLOR:                              process.env.SERVER_APP_RESTARTER__COLOR || 'cyan',
+    LAUNCH_FILE:                        process.env.SERVER_APP_RESTARTER__LAUNCH_FILE,
+    TIME_FOR_WAIT_AFTER_SERVER_STARTED: process.env.SERVER_APP_RESTARTER__TIME_FOR_WAIT_AFTER_SERVER_STARTED || 500
+};
+
+for (let key in CONSTANTS) {
+    if (!CONSTANTS[key]) {
+        console.error(`Build client script: You must set ${key} env!`);
+        process.exit(1);
+        return false;
+    }
+}
+
 const NAME = 'server-app-restarter';
-const PORT = process.env.SAR_PORT || 8801;
-const COLOR = process.env.SAR_COLOR || 'cyan';
-const BOOTSTRAP = process.env.SAR_BOOTSTRAP || 'build/server.js';
-const TIME_FOR_WAIT_AFTER_SERVER_STARTED = process.env.SAR_TFWASS || 500;
+
 const ctx = {
     'name': NAME,
-    'color': COLOR,
-    'port': PORT,
+    'color': CONSTANTS.COLOR,
+    'port': CONSTANTS.PORT,
     'types': types
 };
 
 const io = require('socket.io')(server);
 const sendConsoleText = utils.sendConsoleText.bind(ctx);
 server.on('request', utils.httpServerHandler.bind(ctx));
-server.listen(PORT);
+server.listen(CONSTANTS.PORT);
 
 let appServer = null;
 
@@ -36,7 +48,7 @@ io.on('connection', (socket) => {
     });
 });
 
-sendConsoleText(`started on ${PORT}`);
+sendConsoleText(`started on ${CONSTANTS.PORT}`);
 
 
 types['restart-app-server'] = () => {
@@ -50,7 +62,7 @@ types['restart-app-server'] = () => {
                     setTimeout(() => {
                         resolve();
                         types['restart-app-server'].promise = null;
-                    }, TIME_FOR_WAIT_AFTER_SERVER_STARTED);
+                    }, CONSTANTS.TIME_FOR_WAIT_AFTER_SERVER_STARTED);
                 });
             })
 
@@ -69,7 +81,7 @@ const createAppServer = () => {
     for (let key in process.env) {
         env[key] = process.env[key];
     }
-    appServer = respawn(['node', BOOTSTRAP], {
+    appServer = respawn(['node', CONSTANTS.LAUNCH_FILE], {
         env: env,
         fork: false,
         kill: 2000,

@@ -1,5 +1,5 @@
 'use strict';
 
 export default () => {
-	return 'ok!';
+	return 'Server render: It works!';
 };
