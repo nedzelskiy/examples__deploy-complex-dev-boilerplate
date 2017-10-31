@@ -1,5 +1,21 @@
 'use strict';
 
+const CONSTANTS = {
+    SERVER_STATIC_WATCHER__PORT:    process.env.SERVER_STATIC_WATCHER__PORT,
+    SERVER_STATIC_WATCHER__COLOR:   process.env.SERVER_STATIC_WATCHER__COLOR || 'yellow',
+    SERVER_SRC_FOLDER:              process.env.SERVER_SRC_FOLDER,
+    SERVER_BUILD_FOLDER:            process.env.SERVER_BUILD_FOLDER,
+    ON_SUCCESS_CALLBACK:            process.env.SERVER_STATIC_WATCHER__SUCCESS_CALLBACK,
+};
+
+for (let key in CONSTANTS) {
+    if (!CONSTANTS[key]) {
+        console.error(`Build client script: You must set ${key} env!`);
+        process.exit(1);
+        return false;
+    }
+}
+
 const types = {};
 const fs = require('fs');
 const fse = require('fs-extra');
@@ -10,28 +26,22 @@ const { exec } = require('child_process');
 const Watcher = require('watch-fs').Watcher;
 const util = require('./microservices-utils');
 const recursive = require("recursive-readdir");
-
-
 const NAME = 'server-static-watcher';
-const PORT = process.env.SSW_PORT || 8803;
-const COLOR = process.env.SSW_COLOR || 'yellow';
-const DESTINATION = process.env.SERVER_BUILD_FOLDER;
-const BOOTSTRAP = process.env.SERVER_SRC_FOLDER;
-const ON_SUCCESS_CALLBACK = process.env.SSW_SUCCESS_CALLBACK;
+
 
 const ctx = {
     'name': NAME,
-    'color': COLOR,
-    'port': PORT,
+    'color': CONSTANTS.SERVER_STATIC_WATCHER__COLOR,
+    'port': CONSTANTS.SERVER_STATIC_WATCHER__PORT,
     'types': types
 };
 const io = require('socket.io')(server);
 const sendConsoleText = util.sendConsoleText.bind(ctx);
 server.on('request', util.httpServerHandler.bind(ctx));
-server.listen(PORT);
+server.listen(CONSTANTS.SERVER_STATIC_WATCHER__PORT);
 
 const watcher = new Watcher({
-    paths: [ BOOTSTRAP ],
+    paths: [ CONSTANTS.SERVER_SRC_FOLDER ],
     filters: {
         includeFile: function(name) {
             return !/\.tsx?/.test(name);
@@ -75,7 +85,7 @@ const blockedExt = [
 ];
 
 const deleteFile = (fileName) => {
-    fse.remove(fileName.replace(BOOTSTRAP, DESTINATION))
+    fse.remove(fileName.replace(CONSTANTS.SERVER_SRC_FOLDER, CONSTANTS.SERVER_BUILD_FOLDER))
         .catch(err => {
             sendConsoleText(err, 'error');
         });
@@ -83,14 +93,14 @@ const deleteFile = (fileName) => {
 
 const copyFile = (fileName) => {
     let ext = fileName.split('.').pop();
-    fse.outputFileSync(fileName.replace(BOOTSTRAP, DESTINATION), fs.readFileSync(fileName, 'utf-8'));
+    fse.outputFileSync(fileName.replace(CONSTANTS.SERVER_SRC_FOLDER, CONSTANTS.SERVER_BUILD_FOLDER), fs.readFileSync(fileName, 'utf-8'));
     return Promise.resolve([fileName]);
 };
 
 const copyAllFiles = () => {
     return new Promise((resolve, reject) => {
         recursive(
-            BOOTSTRAP,
+            CONSTANTS.SERVER_SRC_FOLDER,
             [
                 (fileName, stats) => {
                     let ext = fileName.split('.').pop();
@@ -105,7 +115,7 @@ const copyAllFiles = () => {
                     return false;
                 }
                 files.forEach(fileName => {
-                    fse.outputFileSync(fileName.replace(BOOTSTRAP, DESTINATION), fs.readFileSync(fileName, 'utf-8'));
+                    fse.outputFileSync(fileName.replace(CONSTANTS.SERVER_SRC_FOLDER, CONSTANTS.SERVER_BUILD_FOLDER), fs.readFileSync(fileName, 'utf-8'));
                 });
                 resolve(files);
             }
@@ -113,19 +123,9 @@ const copyAllFiles = () => {
     });
 };
 
-sendConsoleText(`started on ${PORT}`);
+sendConsoleText(`started on ${CONSTANTS.SERVER_STATIC_WATCHER__PORT}`);
 
 types['copy-server-static'] = (fileName) => {
-    if (!DESTINATION) {
-        let mess = 'DESTINATION not setted!';
-        sendConsoleText(mess, 'error');
-        return Promise.reject(mess);
-    }
-    if (!BOOTSTRAP) {
-        let mess = 'BOOTSTRAP not setted!';
-        sendConsoleText(mess, 'error');
-        return Promise.reject(mess);
-    }
     if (!types['copy-server-static'].promise) {
         types['copy-server-static'].promise =
         new Promise((resolve, reject) => {
@@ -136,9 +136,9 @@ types['copy-server-static'] = (fileName) => {
                         delete types['copy-server-static'].promise
                     }, 0);
                     sendConsoleText(`static files copied! ${files.toString()}`);
-                    if (ON_SUCCESS_CALLBACK) {
-                        sendConsoleText(`starting callback task "${ON_SUCCESS_CALLBACK}" ...`);
-                        exec(ON_SUCCESS_CALLBACK, (error, stdout, stderr) => {
+                    if (CONSTANTS.ON_SUCCESS_CALLBACK) {
+                        sendConsoleText(`starting callback task "${CONSTANTS.ON_SUCCESS_CALLBACK}" ...`);
+                        exec(CONSTANTS.ON_SUCCESS_CALLBACK, (error, stdout, stderr) => {
                             if (error) {
                                 reject(error);
                                 return;

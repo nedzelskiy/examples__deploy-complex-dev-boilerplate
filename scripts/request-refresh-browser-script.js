@@ -1,12 +1,23 @@
 'use strict';
 
-const URL_BROWSER_RELOAD_SERVER = process.env.URL_BROWSER_RELOAD_SERVER || 'http://localhost:8802';
+const CONSTANTS = {
+    URL_BROWSER_RELOAD_SERVER:  process.env.URL_BROWSER_RELOAD_SERVER
+};
+
+for (let key in CONSTANTS) {
+    if (!CONSTANTS[key]) {
+        console.error(`Build client script: You must set ${key} env!`);
+        process.exit(1);
+        return false;
+    }
+}
+
 const request = require('request');
 
 new Promise((resolve, reject) => {
     request(
         {
-            uri: URL_BROWSER_RELOAD_SERVER,
+            uri: CONSTANTS.URL_BROWSER_RELOAD_SERVER,
             headers: {'socket-control-command': 'browser-refresh'},
             proxy: ''
         },
@@ -26,4 +37,4 @@ new Promise((resolve, reject) => {
         }
     );
 })
-    .catch(err => console.error(err));
+.catch(err => console.error(err));

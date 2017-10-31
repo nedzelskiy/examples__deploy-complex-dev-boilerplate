@@ -5,19 +5,31 @@ const http = require('http');
 const server = http.createServer();
 const util = require('./microservices-utils');
 
+
+const CONSTANTS = {
+    PORT:   process.env.SERVER_BROWSER_RESTARTER__PORT,
+    COLOR:  process.env.SERVER_BROWSER_RESTARTER__COLOR || 'cyan'
+};
+
+for (let key in CONSTANTS) {
+    if (!CONSTANTS[key]) {
+        console.error(`Build client script: You must set ${key} env!`);
+        process.exit(1);
+        return false;
+    }
+}
+
 const NAME = 'server-browser-restarter';
-const PORT = process.env.SBR_PORT || 8802;
-const COLOR = process.env.SBR_COLOR || 'magenta';
 const ctx = {
     'name': NAME,
-    'color': COLOR,
-    'port': PORT,
+    'color': CONSTANTS.COLOR,
+    'port': CONSTANTS.PORT,
     'types': types
 };
 const io = require('socket.io')(server);
 const sendConsoleText = util.sendConsoleText.bind(ctx);
 server.on('request', util.httpServerHandler.bind(ctx));
-server.listen(PORT);
+server.listen(CONSTANTS.PORT);
 
 let socketsToBrowsers = {};
 
@@ -56,7 +68,7 @@ io.on('connection', (socket) => {
     });
 });
 
-sendConsoleText(`started on ${PORT}`);
+sendConsoleText(`started on ${CONSTANTS.PORT}`);
 
 types['browser-refresh'] = () => {
     if (!types['browser-refresh'].promise) {

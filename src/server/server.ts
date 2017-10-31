@@ -1,5 +1,8 @@
 'use strict';
 
+const SERVER_DOMAIN_NAME: string = (process.env as any).SERVER_DOMAIN_NAME || 'localhost';
+const SERVER_PORT: string = (process.env as any).SERVER_PORT || (process.env as any).PORT || 80;
+
 import * as fs from 'fs';
 import * as ejs from 'ejs';
 import * as http from 'http';
@@ -39,13 +42,9 @@ server.on('request', (req, res) => {
 		return;
 	}
 	res.setHeader('Content-Type', 'text/html');
-	if (debug) {
-		const clientReloadScriptMaker = require('../scripts/build-client-reload-script');
-		res.write(clientReloadScriptMaker.buildHtmlScript());
-	}
-	res.write(`Text from server render: ${ makeResponseText() }`);
 	let html = ejs.render(fs.readFileSync(__dirname + '/index.ejs', 'utf-8').toString(), {});
+	res.write(makeResponseText());
 	res.end(html);
-}).listen(6766, () => {
-	console.log(`Server is running on http://localhost:6766! ${new Date()}`);
+}).listen(SERVER_PORT, () => {
+	console.log(`Server is running on http://${SERVER_DOMAIN_NAME}:${SERVER_PORT}! ${new Date()}`);
 });
