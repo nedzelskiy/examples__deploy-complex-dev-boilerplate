@@ -10,21 +10,40 @@ const debug = ((process.env as any).NODE_ENV === 'production') ? false : true;
 
 server.on('request', (req, res) => {
 	res.setStatus = 200;
-	if ('/client/client-bundle.js' === req.url) {
-		res.setHeader('Content-Type', 'text/javascript');
-		fs.createReadStream(`${__dirname}/client/client-bundle.js`, 'utf-8').pipe(res);
-		return false;
-	}
-	if ('/client/client-bundle.css' === req.url) {
-		res.setHeader('Content-Type', 'text/css');
-		fs.createReadStream(`${__dirname}/client/client-bundle.css`, 'utf-8').pipe(res);
-		return false;
+	if ('/' !== req.url) {
+		try {
+			let file = fs.readFileSync(`${__dirname}${req.url}`);
+			res.end(file);
+		} catch (err) {
+			res.setStatus = 404;
+			res.end('Not found!');
+		}
+		// let fileStream = fs.createReadStream(`${__dirname}${req.url}`);
+		// // res.setHeader('Content-Type', `image/${ req.url.split('.').pop() }`);
+		// fileStream
+         //    .on('error', err => {
+		// 		res.setHeader('Content-Type', 'text/plain');
+         //    	if (err.code === 'ENOENT') {
+		// 			res.setStatus = 404;
+		// 			res.end('Not found!');
+		// 		} else {
+		// 			if (!res.headersSent) {
+		// 				res.setStatus = 500;
+		// 				res.end('Internal error!');
+		// 			} else {
+		// 				res.end('Some error occurred!');
+		// 			}
+		// 		}
+		// 	})
+         //    .pipe(res);
+		return;
 	}
 	res.setHeader('Content-Type', 'text/html');
 	if (debug) {
 		const clientReloadScriptMaker = require('../scripts/build-client-reload-script');
 		res.write(clientReloadScriptMaker.buildHtmlScript());
 	}
+	res.write(`Text from server render: ${ makeResponseText() }`);
 	let html = ejs.render(fs.readFileSync(__dirname + '/index.ejs', 'utf-8').toString(), {});
 	res.end(html);
 }).listen(6766, () => {
