@@ -1,5 +1,5 @@
 #!/bin/bash
-env.sh && \
+eval `grep "^export " env.sh` && \
 node node_modules/concurrently/src/main.js  \
 "node node_modules/webpack/bin/webpack.js --config ./configs/webpack-client.conf.js" \
 "node microservices/server-app-restarter.js" \

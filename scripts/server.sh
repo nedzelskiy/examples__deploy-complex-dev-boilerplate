@@ -1,5 +1,5 @@
 #!/bin/bash
-env.sh && \
+eval `grep "^export " env.sh` && \
 node node_modules/concurrently/src/main.js  \
 "node microservices/server-static-watcher.js" \
 "node microservices/server-app-restarter.js" \
