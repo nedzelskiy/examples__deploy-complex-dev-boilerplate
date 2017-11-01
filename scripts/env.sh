@@ -1,3 +1,4 @@
+#!/bin/bash
 export SERVER_PORT=6655                                                                                           &&
 export SERVER_DOMAIN_NAME='localhost'                                                                             &&
 export PROXY_SERVER_PORT=6006                                                                                     &&
