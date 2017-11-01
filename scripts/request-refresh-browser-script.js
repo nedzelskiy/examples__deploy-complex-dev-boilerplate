@@ -1,12 +1,15 @@
 'use strict';
 
+const path = require('path');
+const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__filename)), '');
+
 const CONSTANTS = {
-    URL_BROWSER_RELOAD_SERVER:  process.env.URL_BROWSER_RELOAD_SERVER
+    SERVER_BROWSER_RESTARTER__URL:  process.env.SERVER_BROWSER_RESTARTER__URL
 };
 
 for (let key in CONSTANTS) {
     if (!CONSTANTS[key]) {
-        console.error(`Build client script: You must set ${key} env!`);
+        console.error(`${FILENAME}: You must set ${key} env!`);
         process.exit(1);
         return false;
     }
@@ -17,7 +20,7 @@ const request = require('request');
 new Promise((resolve, reject) => {
     request(
         {
-            uri: CONSTANTS.URL_BROWSER_RELOAD_SERVER,
+            uri: CONSTANTS.SERVER_BROWSER_RESTARTER__URL,
             headers: {'socket-control-command': 'browser-refresh'},
             proxy: ''
         },
@@ -37,4 +40,4 @@ new Promise((resolve, reject) => {
         }
     );
 })
-.catch(err => console.error(err));
+.catch(err => console.error(`${FILENAME}:`, err));

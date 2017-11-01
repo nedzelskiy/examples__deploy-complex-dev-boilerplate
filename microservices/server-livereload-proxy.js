@@ -1,29 +1,29 @@
 'use strict';
+const path = require('path');
+const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__filename)), '');
 
 const CONSTANTS = {
-    PORT:                       process.env.PROXY_SERVER_PORT,
-    COLOR:                      process.env.SBR_COLOR || 'magentaBright',
-    SERVER_PORT:                process.env.SERVER_PORT,
-    SERVER_DOMAIN_NAME:         process.env.SERVER_DOMAIN_NAME,
-    URL_BROWSER_RELOAD_SERVER:  process.env.URL_BROWSER_RELOAD_SERVER
+    SERVER__URL:                    process.env.SERVER__URL,
+    SERVER_BROWSER_RESTARTER__URL:  process.env.SERVER_BROWSER_RESTARTER__URL,
+    SERVER_LIVERELOAD_PROXY__URL:   process.env.SERVER_LIVERELOAD_PROXY__URL,
+    SERVER_LIVERELOAD_PROXY__PORT:  process.env.SERVER_LIVERELOAD_PROXY__PORT,
+    SERVER_LIVERELOAD_PROXY__COLOR: process.env.SERVER_LIVERELOAD_PROXY__COLOR || 'magentaBright'
 };
 
 for (let key in CONSTANTS) {
     if (!CONSTANTS[key]) {
-        console.error(`Build client script: You must set ${key} env!`);
+        console.error(`${FILENAME}: You must set ${key} env!`);
         process.exit(1);
         return false;
     }
 }
 
 const util = require('./microservices-utils');
-const NAME = 'server-livereload-proxy';
 
 const ctx = {
-    'name': NAME,
-    'color': CONSTANTS.COLOR,
-    'port': CONSTANTS.PORT,
-    'types': {}
+    'name': FILENAME,
+    'color': CONSTANTS.SERVER_LIVERELOAD_PROXY__COLOR,
+    'port': CONSTANTS.SERVER_LIVERELOAD_PROXY__PORT
 };
 const sendConsoleText = util.sendConsoleText.bind(ctx);
 
@@ -36,14 +36,14 @@ const buildHtmlScript = () => {
     const clientReloadCode = fs.readFileSync('./scripts/client-browser-restarter-script.js', 'utf-8');
     return (`
         <script>${ libClient }</script> 
-        <script>${ clientReloadCode.replace("[serverUrl]", CONSTANTS.URL_BROWSER_RELOAD_SERVER) }</script>
+        <script>${ clientReloadCode.replace("[serverUrl]", CONSTANTS.SERVER_BROWSER_RESTARTER__URL) }</script>
     `);
 };
 
 http.createServer(function(req, res) {
     request(
         {
-            uri: `http://${CONSTANTS.SERVER_DOMAIN_NAME}:${CONSTANTS.SERVER_PORT}${req.url}`,
+            uri: `${CONSTANTS.SERVER__URL}${req.url}`,
             proxy: ''
         },
         (error, response, body) => {
@@ -63,11 +63,11 @@ http.createServer(function(req, res) {
             }
             if (!!~body.indexOf('<html')) {
                 body = body + buildHtmlScript();
+                res.setHeader('content-length', body.length);
             }
-            res.setHeader('content-length', body.length);
             res.end(body);
         }
     );
-}).listen(CONSTANTS.PORT, () => {
-    sendConsoleText(`Server is running on http://localhost:${CONSTANTS.PORT}! ${new Date()}`);
+}).listen(CONSTANTS.SERVER_LIVERELOAD_PROXY__PORT, () => {
+    sendConsoleText(`Proxy server is running on ${util.getChalkInstance().black.bgYellow.underline(CONSTANTS.SERVER_LIVERELOAD_PROXY__URL)} ${new Date()}`);
 });

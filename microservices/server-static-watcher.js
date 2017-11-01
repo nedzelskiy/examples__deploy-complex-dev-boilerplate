@@ -1,36 +1,41 @@
 'use strict';
 
+const path = require('path');
+const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__filename)), '');
+
 const CONSTANTS = {
-    SERVER_STATIC_WATCHER__PORT:    process.env.SERVER_STATIC_WATCHER__PORT,
-    SERVER_STATIC_WATCHER__COLOR:   process.env.SERVER_STATIC_WATCHER__COLOR || 'yellow',
-    SERVER_SRC_FOLDER:              process.env.SERVER_SRC_FOLDER,
-    SERVER_BUILD_FOLDER:            process.env.SERVER_BUILD_FOLDER,
-    ON_SUCCESS_CALLBACK:            process.env.SERVER_STATIC_WATCHER__SUCCESS_CALLBACK,
+    SERVER__SRC_FOLDER:                         process.env.SERVER__SRC_FOLDER,
+    SERVER__BUILD_FOLDER:                       process.env.SERVER__BUILD_FOLDER,
+    SERVER_STATIC_WATCHER__PORT:                process.env.SERVER_STATIC_WATCHER__PORT,
+    SERVER_STATIC_WATCHER__COLOR:               process.env.SERVER_STATIC_WATCHER__COLOR || 'yellow',
+    SERVER_STATIC_WATCHER__SUCCESS_CALLBACK:    process.env.SERVER_STATIC_WATCHER__SUCCESS_CALLBACK
 };
 
 for (let key in CONSTANTS) {
     if (!CONSTANTS[key]) {
-        console.error(`Build client script: You must set ${key} env!`);
+        console.error(`${FILENAME}: You must set ${key} env!`);
         process.exit(1);
         return false;
     }
 }
 
+CONSTANTS.SERVER__SRC_FOLDER = path.normalize(CONSTANTS.SERVER__SRC_FOLDER);
+CONSTANTS.SERVER__BUILD_FOLDER = path.normalize(CONSTANTS.SERVER__BUILD_FOLDER);
+
 const types = {};
 const fs = require('fs');
-const fse = require('fs-extra');
 const http = require('http');
+const fse = require('fs-extra');
 const request = require('request');
 const server = http.createServer();
 const { exec } = require('child_process');
 const Watcher = require('watch-fs').Watcher;
 const util = require('./microservices-utils');
 const recursive = require("recursive-readdir");
-const NAME = 'server-static-watcher';
 
 
 const ctx = {
-    'name': NAME,
+    'name': FILENAME,
     'color': CONSTANTS.SERVER_STATIC_WATCHER__COLOR,
     'port': CONSTANTS.SERVER_STATIC_WATCHER__PORT,
     'types': types
@@ -41,7 +46,7 @@ server.on('request', util.httpServerHandler.bind(ctx));
 server.listen(CONSTANTS.SERVER_STATIC_WATCHER__PORT);
 
 const watcher = new Watcher({
-    paths: [ CONSTANTS.SERVER_SRC_FOLDER ],
+    paths: [ CONSTANTS.SERVER__SRC_FOLDER ],
     filters: {
         includeFile: function(name) {
             return !/\.tsx?/.test(name);
@@ -85,7 +90,7 @@ const blockedExt = [
 ];
 
 const deleteFile = (fileName) => {
-    fse.remove(fileName.replace(CONSTANTS.SERVER_SRC_FOLDER, CONSTANTS.SERVER_BUILD_FOLDER))
+    fse.remove(fileName.replace(CONSTANTS.SERVER__SRC_FOLDER, CONSTANTS.SERVER__BUILD_FOLDER))
         .catch(err => {
             sendConsoleText(err, 'error');
         });
@@ -93,14 +98,14 @@ const deleteFile = (fileName) => {
 
 const copyFile = (fileName) => {
     let ext = fileName.split('.').pop();
-    fse.outputFileSync(fileName.replace(CONSTANTS.SERVER_SRC_FOLDER, CONSTANTS.SERVER_BUILD_FOLDER), fs.readFileSync(fileName, 'utf-8'));
+    fse.outputFileSync(fileName.replace(CONSTANTS.SERVER__SRC_FOLDER, CONSTANTS.SERVER__BUILD_FOLDER), fs.readFileSync(fileName, 'utf-8'));
     return Promise.resolve([fileName]);
 };
 
 const copyAllFiles = () => {
     return new Promise((resolve, reject) => {
         recursive(
-            CONSTANTS.SERVER_SRC_FOLDER,
+            CONSTANTS.SERVER__SRC_FOLDER,
             [
                 (fileName, stats) => {
                     let ext = fileName.split('.').pop();
@@ -115,7 +120,7 @@ const copyAllFiles = () => {
                     return false;
                 }
                 files.forEach(fileName => {
-                    fse.outputFileSync(fileName.replace(CONSTANTS.SERVER_SRC_FOLDER, CONSTANTS.SERVER_BUILD_FOLDER), fs.readFileSync(fileName, 'utf-8'));
+                    fse.outputFileSync(fileName.replace(CONSTANTS.SERVER__SRC_FOLDER, CONSTANTS.SERVER__BUILD_FOLDER), fs.readFileSync(fileName, 'utf-8'));
                 });
                 resolve(files);
             }
@@ -136,9 +141,9 @@ types['copy-server-static'] = (fileName) => {
                         delete types['copy-server-static'].promise
                     }, 0);
                     sendConsoleText(`static files copied! ${files.toString()}`);
-                    if (CONSTANTS.ON_SUCCESS_CALLBACK) {
-                        sendConsoleText(`starting callback task "${CONSTANTS.ON_SUCCESS_CALLBACK}" ...`);
-                        exec(CONSTANTS.ON_SUCCESS_CALLBACK, (error, stdout, stderr) => {
+                    if (CONSTANTS.SERVER_STATIC_WATCHER__SUCCESS_CALLBACK) {
+                        sendConsoleText(`starting callback task "${CONSTANTS.SERVER_STATIC_WATCHER__SUCCESS_CALLBACK}" ...`);
+                        exec(CONSTANTS.SERVER_STATIC_WATCHER__SUCCESS_CALLBACK, (error, stdout, stderr) => {
                             if (error) {
                                 reject(error);
                                 return;

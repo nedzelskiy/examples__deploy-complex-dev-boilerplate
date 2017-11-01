@@ -21,6 +21,9 @@ const utils = {
             chalk[textColor](text)
         );
     },
+    getChalkInstance: function() {
+        return chalkInstance;
+    },
     httpServerHandler: function (req, res) {
         if  (!!~req.url.indexOf('socket.io')) {
             return false;
@@ -30,7 +33,7 @@ const utils = {
             res.end('only url "/" allowed');
             return false;
         }
-        const   name = this.name,
+        const name = this.name,
             types = this.types,
             header = req.headers['socket-control-command'];
 

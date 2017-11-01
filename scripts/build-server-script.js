@@ -1,23 +1,23 @@
 'use strict';
-
-const fs = require('fs');
-const request = require('request');
+const path = require('path');
+const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__filename)), '');
 
 const CONSTANTS = {
-    SERVER_PORT:                process.env.SERVER_PORT,
-    PROXY_SERVER_PORT:          process.env.PROXY_SERVER_PORT,
-    SERVER_DOMAIN_NAME:         process.env.SERVER_DOMAIN_NAME,
-    URL_APP_RELOAD_SERVER:      process.env.URL_APP_RELOAD_SERVER,
-    URL_BROWSER_RELOAD_SERVER:  process.env.URL_BROWSER_RELOAD_SERVER,
+    SERVER__URL:                    process.env.SERVER__URL,
+    SERVER_APP_RESTARTER__URL:      process.env.SERVER_APP_RESTARTER__URL,
+    SERVER_LIVERELOAD_PROXY__URL:   process.env.SERVER_LIVERELOAD_PROXY__URL,
+    SERVER_BROWSER_RESTARTER__URL:  process.env.SERVER_BROWSER_RESTARTER__URL
 };
 
 for (let key in CONSTANTS) {
     if (!CONSTANTS[key]) {
-        console.error(`Build server script: You must set ${key} env!`);
+        console.error(`${FILENAME}: You must set ${key} env!`);
         process.exit(1);
         return false;
     }
 }
+const fs = require('fs');
+const request = require('request');
 
 const handleResponse = (resolve, reject, error, response, body) => {
     if (error) {
@@ -37,7 +37,7 @@ const handleResponse = (resolve, reject, error, response, body) => {
 new Promise((resolve, reject) => {
     request(
         {
-            uri: CONSTANTS.URL_APP_RELOAD_SERVER,
+            uri: CONSTANTS.SERVER_APP_RESTARTER__URL,
             headers: {'socket-control-command': 'restart-app-server'},
             proxy: ''
         },
@@ -48,7 +48,7 @@ new Promise((resolve, reject) => {
     return new Promise((resolve, reject) => {
         request(
             {
-                uri: CONSTANTS.URL_BROWSER_RELOAD_SERVER,
+                uri: CONSTANTS.SERVER_BROWSER_RESTARTER__URL,
                 headers: {'socket-control-command': 'browser-refresh'},
                 proxy: ''
             },
@@ -59,10 +59,10 @@ new Promise((resolve, reject) => {
 .then(() => {
     console.log('');
     console.log('=======================================');
-    console.log(`SERVER RUNS ON: http://${CONSTANTS.SERVER_DOMAIN_NAME}:${CONSTANTS.SERVER_PORT}`);
-    console.log(`LIVERELOAD SERVER RUNS ON: http://localhost:${CONSTANTS.PROXY_SERVER_PORT}`);
+    console.log(`SERVER RUNS ON: ${CONSTANTS.SERVER__URL}`);
+    console.log(`LIVERELOAD SERVER RUNS ON: ${CONSTANTS.SERVER_LIVERELOAD_PROXY__URL}`);
     console.log('=======================================');
     console.log('');
 
 })
-.catch(err => console.error(err));
+.catch(err => console.error(`${FILENAME}:`, err));

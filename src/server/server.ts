@@ -1,7 +1,7 @@
 'use strict';
 
-const SERVER_DOMAIN_NAME: string = (process.env as any).SERVER_DOMAIN_NAME || 'localhost';
-const SERVER_PORT: string = (process.env as any).SERVER_PORT || (process.env as any).PORT || 80;
+const SERVER__PORT: string = (process.env as any).SERVER__PORT || (process.env as any).PORT || 80;
+const SERVER__URL: string = (process.env as any).SERVER__URL || `http://localhost:${SERVER__PORT}`;
 
 import * as fs from 'fs';
 import * as ejs from 'ejs';
@@ -45,6 +45,6 @@ server.on('request', (req, res) => {
 	let html = ejs.render(fs.readFileSync(__dirname + '/index.ejs', 'utf-8').toString(), {});
 	res.write(makeResponseText());
 	res.end(html);
-}).listen(SERVER_PORT, () => {
-	console.log(`Server is running on http://${SERVER_DOMAIN_NAME}:${SERVER_PORT}! ${new Date()}`);
+}).listen(SERVER__PORT, () => {
+	console.log(`Server is running on ${SERVER__URL} ${new Date()}`);
 });
