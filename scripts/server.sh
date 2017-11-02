@@ -1,6 +1,6 @@
 #!/bin/bash
 eval `grep "^export " ./scripts/env.sh` && \
-node node_modules/concurrently/src/main.js  \
+node node_modules/concurrently/src/main.js --prefix "[{index}]-pid:[{pid}]"  --allow-restart  --restart-tries 5 \
 "node microservices/server-static-watcher.js" \
 "node microservices/server-app-restarter.js" \
 "node microservices/server-browser-restarter.js" \

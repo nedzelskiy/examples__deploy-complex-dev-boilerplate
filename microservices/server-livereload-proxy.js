@@ -69,5 +69,5 @@ http.createServer(function(req, res) {
         }
     );
 }).listen(CONSTANTS.SERVER_LIVERELOAD_PROXY__PORT, () => {
-    sendConsoleText(`Proxy server is running on ${util.getChalkInstance().black.bgYellow.underline(CONSTANTS.SERVER_LIVERELOAD_PROXY__URL)} ${new Date()}`);
+    sendConsoleText(`Proxy server is running on ${CONSTANTS.SERVER_LIVERELOAD_PROXY__URL} ${new Date()}`);
 });

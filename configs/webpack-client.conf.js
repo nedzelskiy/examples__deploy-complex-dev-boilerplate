@@ -1,13 +1,30 @@
 'use strict';
+const path = require('path');
+const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__filename)), '');
+
+const CONSTANTS = {
+    CLIENT__SRC_FOLDER:             process.env.CLIENT__SRC_FOLDER,
+    CLIENT__BUILD_FOLDER:           process.env.CLIENT__BUILD_FOLDER
+};
+
+for (let key in CONSTANTS) {
+    if (!CONSTANTS[key]) {
+        console.error(`${FILENAME}: You must set ${key} env!`);
+        process.exit(1);
+        return false;
+    }
+}
 
 const webpack = require('webpack');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const WebpackShellPlugin = require('webpack-shell-plugin');
 
+console.log(`${FILENAME}: webpack config running [${process.pid}]`);
+
 module.exports = {
-    entry: './src/client/client.tsx',
+    entry: './' + path.normalize(`${CONSTANTS.CLIENT__SRC_FOLDER}/client.tsx`),
     output: {
-        path: __dirname + `/../build/client/`,
+        path: path.normalize(__dirname + `/../${CONSTANTS.CLIENT__BUILD_FOLDER}`),
         filename: 'client-bundle.js',
         library: 'App'
     },
@@ -16,6 +33,10 @@ module.exports = {
         aggregateTimeout: 20
     },
     resolve: {
+        alias: {
+            'react': 'preact-compat',
+            'react-dom': 'preact-compat'
+        },
         extensions: [".tsx", ".ts", ".js"]
     },
     module: {
@@ -45,7 +66,19 @@ module.exports = {
         }),
         new WebpackShellPlugin({
             onBuildExit:['node ./scripts/build-client-script.js']
-        })
+        }),
+        new webpack.DefinePlugin({
+            'process.env': {
+                'NODE_ENV': JSON.stringify('production')
+            }
+        }),
+        // new webpack.optimize.UglifyJsPlugin({
+        //     compress: { warnings: false },
+        //     comments: false,
+        //     sourceMap: true,
+        //     minimize: false
+        // }),
+        new webpack.optimize.AggressiveMergingPlugin()//Merge chunks
     ],
     devtool: 'source-map'
 };
