@@ -4,7 +4,7 @@ export SERVER__BUILD_FOLDER="build"                                             
 export SERVER__SRC_FOLDER="src/server"                                                                            &&
 export SERVER__URL="http://localhost:${SERVER__PORT}"                                                             &&
 
-export CLIENT__SRC_FOLDER="src/client"                                                                            &&
+export CLIENT__SRC_FOLDER="src/client/node_modules"                                                                            &&
 export CLIENT__BUILD_FOLDER="build/client"                                                                               &&
 
 export SERVER_LIVERELOAD_PROXY__PORT=6006                                                                         &&

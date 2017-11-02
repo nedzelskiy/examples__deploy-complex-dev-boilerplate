@@ -22,7 +22,7 @@ const WebpackShellPlugin = require('webpack-shell-plugin');
 console.log(`${FILENAME}: webpack config running [${process.pid}]`);
 
 module.exports = {
-    entry: './' + path.normalize(`${CONSTANTS.CLIENT__SRC_FOLDER}/client.tsx`),
+    entry: path.normalize(__dirname + `/../${CONSTANTS.CLIENT__SRC_FOLDER}/client.tsx`),
     output: {
         path: path.normalize(__dirname + `/../${CONSTANTS.CLIENT__BUILD_FOLDER}`),
         filename: 'client-bundle.js',

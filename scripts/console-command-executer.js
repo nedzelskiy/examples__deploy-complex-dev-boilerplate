@@ -48,9 +48,22 @@ const killProcessWithChild = (pid) => {
 };
 
 const availableCommands = {
-    'kill': 'kill',
-    'help': 'help',
-    'restart': 'restart'
+    'kill': {
+        name: 'kill',
+        usage: 'kill <PID>          kill process by its PID'
+    },
+    'help': {
+        name: 'help',
+        usage: 'help                show listing for available commands'
+    },
+    'restart': {
+        name: 'restart',
+        usage: 'restart <PID>       restart process by its PID'
+    },
+    'exit': {
+        name: 'exit',
+        usage: 'exit                stop watching for comands and exit script'
+    }
 };
 
 stdin.addListener("data", (d) => {
@@ -58,7 +71,7 @@ stdin.addListener("data", (d) => {
     const commandChunks = commandLine.split(' ');
     const command = commandChunks[0];
     switch (command) {
-        case availableCommands.kill:
+        case availableCommands.kill.name:
             if (commandChunks.length > 1 && /^\d+$/.test(commandChunks[1])) {
                 killProcessWithChild(commandChunks[1])
                     .then(() => {
@@ -71,15 +84,23 @@ stdin.addListener("data", (d) => {
                 console.error(`${FILENAME}: Wrong argument for command ${command}`)
             }
             break;
-        case availableCommands.help:
-            console.log(`${FILENAME}: Available commands are: ${Object.keys(availableCommands).toString()}`);
+        case availableCommands.help.name:
+            let commandsList = [];
+            for (let key in availableCommands) {
+                if (!availableCommands.hasOwnProperty(key)) continue;
+                commandsList.push(` - ${availableCommands[key].usage} \r\n`);
+            }
+            console.log(`${FILENAME}: Available commands are: \r\n${commandsList.join('') }`);
             break;
-        case availableCommands.restart:
+        case availableCommands.restart.name:
             if (commandChunks.length > 1 && /^\d+$/.test(commandChunks[1])) {
                 restartProcessByPid(commandChunks[1], commandLine);
             } else {
                 console.error(`${FILENAME}: Wrong argument for command ${command}`)
             }
+            break;
+        case availableCommands.exit.name:
+                process.exit(0);
             break;
         default:
             console.error(`${FILENAME}: Command not recognized! Use help command!`);
