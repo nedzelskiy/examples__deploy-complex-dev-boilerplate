@@ -37,7 +37,13 @@ module.exports = {
             'react': 'preact-compat',
             'react-dom': 'preact-compat'
         },
-        extensions: [".tsx", ".ts", ".js"]
+        extensions: [".tsx", ".ts", ".js"],
+        modules: [
+            "node_modules",
+            path.normalize(__dirname + `/../${CONSTANTS.CLIENT__SRC_FOLDER}/containers/`),
+            path.normalize(__dirname + `/../${CONSTANTS.CLIENT__SRC_FOLDER}/components/`),
+            path.normalize(__dirname + `/../${CONSTANTS.CLIENT__SRC_FOLDER}/`)
+        ],
     },
     module: {
         rules: [
