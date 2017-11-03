@@ -98,18 +98,19 @@ stdin.on('data', function(key){
 });
 
 const restartProcessByPid = (pid, commandLine, envStr) => {
-    console.log(`${FILENAME}: 'Executing process with ENV: ${envStr}`);
     ps.lookup({ pid: pid }, (err, resultList) => {
         if (err) {
             console.error(`${FILENAME} ERROR: ${err}`);
         }
-        console.log(resultList);
         const process = resultList[0];
         if( process ) {
             killProcessWithChild(pid)
                 .then(() => {
-                    console.log(`${FILENAME}: Command ${commandLine} was executed successful!`);
-                    exec(`${envStr} "${process.command}" ${process.arguments.join(' ')}`, function callback(error, stdout, stderr){
+                    console.log(`"${process.command}" ${process.arguments.join(' ')}`);
+                    exec(`"${process.command}" ${process.arguments.join(' ')}`, {
+                        env: process.env
+                    }, (error, stdout, stderr) => {
+                        console.log(error, stdout, stderr);
                         if (error) {
                             console.error(`${FILENAME} ERROR: ${error}`);
                         } else {
