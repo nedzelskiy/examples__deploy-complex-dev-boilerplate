@@ -38,7 +38,8 @@ const ctx = {
     'name': FILENAME,
     'color': CONSTANTS.SERVER_STATIC_WATCHER__COLOR,
     'port': CONSTANTS.SERVER_STATIC_WATCHER__PORT,
-    'types': types
+    'types': types,
+    'process': process
 };
 const io = require('socket.io')(server);
 const sendConsoleText = util.sendConsoleText.bind(ctx);

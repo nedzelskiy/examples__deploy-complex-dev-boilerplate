@@ -23,7 +23,8 @@ const util = require('./microservices-utils');
 const ctx = {
     'name': FILENAME,
     'color': CONSTANTS.SERVER_LIVERELOAD_PROXY__COLOR,
-    'port': CONSTANTS.SERVER_LIVERELOAD_PROXY__PORT
+    'port': CONSTANTS.SERVER_LIVERELOAD_PROXY__PORT,
+    'process': process
 };
 const sendConsoleText = util.sendConsoleText.bind(ctx);
 

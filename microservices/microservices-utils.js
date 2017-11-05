@@ -7,7 +7,8 @@ const utils = {
     sendConsoleText: function (text, level) {
         const   color = this.color,
                 name = this.name,
-                port = this.port;
+                port = this.port,
+                process = this.process;
 
         let textColor = '',
             type = level || 'info';
@@ -17,6 +18,7 @@ const utils = {
         (type === 'error') && (textColor = 'red');
         console[(type === 'error') ? 'error': 'log'](
             chalk[color](`${name}:${port}`) +
+            chalk[color](`--PID[${process.pid}]`) +
             chalk[textColor](`[${ type }]:`),
             chalk[textColor](text)
         );

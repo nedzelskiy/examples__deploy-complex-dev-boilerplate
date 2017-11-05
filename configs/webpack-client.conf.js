@@ -19,7 +19,7 @@ const webpack = require('webpack');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const WebpackShellPlugin = require('webpack-shell-plugin');
 
-console.log(`${FILENAME}: webpack config running [${process.pid}]`);
+console.log(`${FILENAME}: webpack config running! PID:[${process.pid}]`);
 
 module.exports = {
     entry: path.normalize(__dirname + `/../${CONSTANTS.CLIENT__SRC_FOLDER}/client.tsx`),
