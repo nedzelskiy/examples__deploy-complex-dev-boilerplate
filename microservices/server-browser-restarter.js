@@ -60,11 +60,11 @@ io.on('connection', (socket) => {
     });
     socket.on('close', () => {
         delete socketsToBrowsers[socket.id];
-        sendConsoleText(`browser connection[${socket.id}] closed!`);
+        sendConsoleText(`closed! browser connection[${socket.id}]`);
     });
     socket.on('disconnect', () => {
         delete socketsToBrowsers[socket.id];
-        sendConsoleText(`browser connection[${socket.id}] closed!`);
+        sendConsoleText(`closed! browser connection[${socket.id}]`);
     });
 });
 

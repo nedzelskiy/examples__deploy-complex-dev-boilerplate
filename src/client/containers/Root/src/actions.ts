@@ -7,6 +7,6 @@ export interface IDispatch {
 }
 
 export const getCurrentDate = () => {
-    // let dispatch: IDispatch = this.dispatch;
-    // dispatch({ type: 'GET_CURRENT_DATE'});
+    let dispatch: IDispatch = this.dispatch;
+    dispatch({ type: 'GET_CURRENT_DATE'});
 };
