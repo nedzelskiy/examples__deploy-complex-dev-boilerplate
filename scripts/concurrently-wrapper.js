@@ -1,10 +1,11 @@
 const fs = require('fs');
-const ps = require('ps-node');
 const terminate = require('terminate');
 const parse = require('shell-quote').parse;
 const exec = require('child_process').exec;
 const argv = require('minimist')(process.argv.slice(2));
-const execConsole = require('js_console_command_executor');
+var chalk = require('chalk');
+var _ = require('lodash');
+
 
 let file = fs
     .readFileSync('./node_modules/concurrently/src/main.js', 'utf-8')
@@ -13,7 +14,8 @@ let file = fs
 eval(file);
 const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__filename)), '');
 
-config.allowRestart = false;
+config.allowRestart = true;
+config.killOthers = false;
 config.prefix = "[{index}]-pid:[{pid}]";
 run(argv['_']);
 
@@ -24,13 +26,26 @@ const availableCommands = {
                 console.error(`Wrong argument pid for command r - restart by pid`);
                 return false;
             }
-            console.log('restarting!');
+            let eventMock = {
+                child: {
+                    pid: pid
+                }
+            };
+            let childrenInfoMock = {};
+            childrenInfoMock[pid] = {
+                command: 'node microservices/server-app-restarter.js', // TODO
+                index: 0, // TODO
+                restartTries: 0,
+                prefixColor: _.get(chalk, 'gray.dim', chalk.gray.dim), // TODO
+                options: {}
+            };
+            respawnChild(eventMock, childrenInfoMock);
         }
     },
     'exit': {
         run: function() {
             const signal = 'SIGTERM';
-            console.log(`Command exit ${process.id} will be executed with signal [${signal}]!`);
+            console.log(`Command exit ${process.pid} will be executed with signal [${signal}]!`);
             terminate(process.pid, 'SIGTERM', err => {
                 if (err) {
                     console.error(err);
@@ -39,7 +54,7 @@ const availableCommands = {
         }
     }
 };
-availableCommands.r.usage =    'r [PID]                         restart concurrently task by pid';
-availableCommands.exit.usage = 'exit                            stop watching for commands and exit script';
-
-execConsole(availableCommands)();
+availableCommands.r.usage = 'r [PID] <> restart concurrently task by pid';
+availableCommands.exit.usage = 'exit <> stop watching for commands and exit script';
+const execConsole = require('js_console_command_executor')(availableCommands);
+execConsole();
