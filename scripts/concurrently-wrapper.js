@@ -1,21 +1,24 @@
-const fs = require('fs');
-const terminate = require('terminate');
-const parse = require('shell-quote').parse;
-const exec = require('child_process').exec;
-const argv = require('minimist')(process.argv.slice(2));
+const terminate = require('terminate'); // kill process with child process!
+
+const exitWithNonZeroCode = () => {
+    terminate(process.pid, err => {
+        if (err) {
+            console.error(err);
+        }
+    });
+};
 
 process.on('uncaughtException', (err) => {
     console.log('==================================');
     console.error(err);
     console.log('==================================');
-    setTimeout(() => {
-        terminate(process.pid, err => {
-            if (err) {
-                console.error(err);
-            }
-        });
-    }, 200);
+    setTimeout(exitWithNonZeroCode, 100);
 });
+
+const fs = require('fs');
+const parse = require('shell-quote').parse;
+const exec = require('child_process').exec;
+const argv = require('minimist')(process.argv.slice(2));
 
 let file = fs
     .readFileSync('./node_modules/concurrently/src/main.js', 'utf-8')
@@ -23,6 +26,7 @@ let file = fs
     .replace('#!/usr/bin/', '//');
 eval(file);
 
+let maxIndex = 0;
 let childrenInfoKeeper = {};
 
 // override run func from concurrently
@@ -67,6 +71,9 @@ run = function (commands /* added */, oldIndex) {
             restartTries: config.restartTries,
             prefixColor: lastPrefixColor
         };
+        if (childrenInfoKeeper[child.pid].index * 1 !== maxIndex) {
+            maxIndex = childrenInfoKeeper[child.pid].index * 1;
+        }
         // ===================================== FINISH ADDED ============================
         return child;
     });
@@ -74,28 +81,21 @@ run = function (commands /* added */, oldIndex) {
     var streams = toStreams(children);
 
     handleChildEvents(streams, children, childrenInfo);
-
-    ['SIGINT', 'SIGTERM'].forEach(function(signal) {
-        process.on(signal, function() {
-            children.forEach(function(child) {
-                treeKill(child.pid, signal);
-            });
-        });
-    });
+    // ================= DELETED OTHER CODE FROM HERE ============================
 };
 
 // override handleClose func from concurrently
 handleClose = function(streams, children, childrenInfo) {
-    var aliveChildren = _.clone(children);
+    // deleted var aliveChildren = _.clone(children);
     var exitCodes = [];
     var closeStreams = _.map(streams, 'close');
     var closeStream = Rx.Observable.merge.apply(this, closeStreams);
-    var othersKilled = false;
 
-    // TODO: Is it possible that amount of close events !== count of spawned?
+    // deleted var othersKilled = false;
+
     closeStream.subscribe(function(event) {
         var exitCode = event.data;
-        var nonSuccess = exitCode !== 0;
+        // deleted var nonSuccess = exitCode !== 0;
         exitCodes.push(exitCode);
 
         var prefix = getPrefix(childrenInfo, event.child);
@@ -104,9 +104,6 @@ handleClose = function(streams, children, childrenInfo) {
         var command = childInfo.command;
         logEvent(prefix, prefixColor, command + ' exited with code ' + exitCode);
 
-        aliveChildren = _.filter(aliveChildren, function(child) {
-            return child.pid !== event.child.pid;
-        });
         // ================= DELETED OTHER CODE FROM HERE ============================
     });
 };
@@ -120,7 +117,7 @@ config.restartAfter = 0;
 config.prefix = "[{index}]-pid:[{pid}]";
 run(argv['_']);
 
-const saveExit = () => {
+const exitWithZeroCode = () => {
     let promises = [];
     for (let pid in childrenInfoKeeper) {
         if (!childrenInfoKeeper.hasOwnProperty(pid)) continue;
@@ -134,13 +131,7 @@ const saveExit = () => {
         process.exit(0);
     }).catch(err => {
         console.error(err);
-        setTimeout(() => {
-            terminate(process.pid, err => {
-                if (err) {
-                    console.error(err);
-                }
-            });
-        }, 200);
+        setTimeout(exitWithNonZeroCode, 100);
     });
 };
 
@@ -148,38 +139,46 @@ const availableCommands = {
     'r': {
         run: function(pid) {
             if (!pid || !/^\d+$/.test(pid)) {
-                console.error(`Wrong argument pid for command r - restart by pid`);
+                console.error(`Wrong argument pid for command r - restart by pid, type "help" command`);
                 return false;
             }
-            let eventMock = {
-                child: {
-                    pid: pid
-                }
-            };
-            let oldIndex = childrenInfoKeeper[pid].index;
-            console.log(oldIndex);
             terminate(pid, err => {
                 if (err) {
                     console.error(err);
                 } else {
-                    run([childrenInfoKeeper[pid].command], oldIndex);
+                    if (
+                           'undefined' !== typeof childrenInfoKeeper
+                        && 'undefined' !== typeof childrenInfoKeeper[pid]
+                        && 'undefined' !== typeof childrenInfoKeeper[pid].index
+                        && 'undefined' !== typeof childrenInfoKeeper[pid].command
+                    ) {
+                        run([childrenInfoKeeper[pid].command], childrenInfoKeeper[pid].index);
+                    } else {
+                        console.error(`Can't restart command by pid "${pid}", maybe this process already died!`);
+                        if ('undefined' !== typeof childrenInfoKeeper[pid]) {
+                            delete childrenInfoKeeper[pid];
+                        }
+                    }
                 }
             });
-        }
+        },
+        usage: 'r [PID] <> restart concurrently task by pid'
+    },
+    'add': {
+        run: (command, index) => {
+            let newIndex = index || ++maxIndex;
+            run([command], newIndex);
+        },
+        usage: 'add [command, [index]] <> add a new command to concurrently spawn'
     },
     'exit': {
-        run: function() {
-            saveExit();
-        }
+        run: exitWithZeroCode,
+        usage: 'exit <> stop watching for commands and exit script'
     }
 };
-availableCommands.r.usage = 'r [PID] <> restart concurrently task by pid';
-availableCommands.exit.usage = 'exit <> stop watching for commands and exit script';
 
 const execConsole = require('js_console_command_executor')(availableCommands);
 
-execConsole.actions.doExit = () => {
-    saveExit();
-};
+execConsole.actions.doExit = exitWithZeroCode;
 execConsole();
 
