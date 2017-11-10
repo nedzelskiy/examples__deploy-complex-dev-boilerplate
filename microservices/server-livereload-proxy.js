@@ -50,7 +50,6 @@ http.createServer(function(req, res) {
         (error, response, body) => {
             if (error) {
                 sendConsoleText(error, 'error');
-                process.exit(1);
                 return false;
             }
             if (response && response.headers) {
