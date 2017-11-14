@@ -4,7 +4,8 @@ const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__
 
 const CONSTANTS = {
     CLIENT__SRC_FOLDER:             process.env.CLIENT__SRC_FOLDER,
-    CLIENT__BUILD_FOLDER:           process.env.CLIENT__BUILD_FOLDER
+    CLIENT__BUILD_FOLDER:           process.env.CLIENT__BUILD_FOLDER,
+    CONFIGS_SERVICES__DIR:          process.env.CONFIGS_SERVICES__DIR
 };
 
 for (let key in CONSTANTS) {
@@ -51,7 +52,7 @@ module.exports = {
                 use: {
                     loader: 'ts-loader',
                     options: {
-                        configFile: "../../configs/tsconfig-client.json"
+                        configFile: `../../${CONSTANTS.CONFIGS_SERVICES__DIR}/tsconfig-client.json`
                     }
                 },
                 exclude: /node_modules/

@@ -1,4 +1,6 @@
 #!/bin/bash
+export CONFIGS_SERVICES__DIR="configs"                                                                            &&
+
 export SERVER__PORT=6655                                                                                          &&
 export SERVER__BUILD_FOLDER="build"                                                                               &&
 export SERVER__SRC_FOLDER="src/server/src"                                                                        &&

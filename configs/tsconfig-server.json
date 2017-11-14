@@ -6,7 +6,6 @@
 		"removeComments": true,
 		"target": "es6",
 		"allowJs": true,
-		"outDir": "../build",
 		"sourceMap": true,
 		"strictNullChecks": true,
 		"typeRoots": [

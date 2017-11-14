@@ -1,7 +1,0 @@
-{
-  "watch": [
-    "./configs/",
-    "./scripts/",
-	"./package.json"
-  ]
-}
