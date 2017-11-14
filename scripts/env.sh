@@ -18,6 +18,9 @@ export SERVER_APP_RESTARTER__URL="http://localhost:${SERVER_APP_RESTARTER__PORT}
 export SERVER_BROWSER_RESTARTER__PORT=6602                                                                        &&
 export SERVER_BROWSER_RESTARTER__URL="http://localhost:${SERVER_BROWSER_RESTARTER__PORT}"                         &&
 
-export SERVER_STATIC_WATCHER__PORT=6603                                                                           &&
+export SERVER_TESTS_WATCHER__PORT=6603                                                                            &&
+export SERVER_TESTS_WATCHER__SUCCESS_CALLBACK="node scripts/build-server-script.js"                               &&
+
+export SERVER_STATIC_WATCHER__PORT=6604                                                                           &&
 export SERVER_STATIC_WATCHER__SUCCESS_CALLBACK="node scripts/request-refresh-browser-script.js"
 

@@ -9,9 +9,8 @@ const CONSTANTS = {
 
 for (let key in CONSTANTS) {
     if (!CONSTANTS[key]) {
-        console.error(`${FILENAME}: You must set ${key} env!`);
+        console.log(`${FILENAME}: You must set ${key} env!`);
         process.exit(1);
-        return false;
     }
 }
 
@@ -40,4 +39,4 @@ new Promise((resolve, reject) => {
         }
     );
 })
-.catch(err => console.error(`${FILENAME}:`, err));
+.catch(err => console.log(`${FILENAME}:`, err));

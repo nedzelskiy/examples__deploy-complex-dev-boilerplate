@@ -37,7 +37,6 @@
     "js_console_command_executor": "^1.0.3",
     "keypress": "^0.2.1",
     "minimist": "^1.2.0",
-    "node-cmd": "^3.0.0",
     "node-sass": "^4.5.3",
     "preact": "^8.2.6",
     "preact-compat": "^3.17.0",

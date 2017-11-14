@@ -11,9 +11,8 @@ const CONSTANTS = {
 
 for (let key in CONSTANTS) {
     if (!CONSTANTS[key]) {
-        console.error(`${FILENAME}: You must set ${key} env!`);
+        console.log(`${FILENAME}: You must set ${key} env!`);
         process.exit(1);
-        return false;
     }
 }
 CONSTANTS.SERVER_APP_RESTARTER__LAUNCH_FILE = path.normalize(CONSTANTS.SERVER_APP_RESTARTER__LAUNCH_FILE);

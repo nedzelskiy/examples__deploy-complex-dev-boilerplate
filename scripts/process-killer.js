@@ -13,7 +13,7 @@ if (args.k && /^[0-9]+$/.test(args.k)) {
     }
     terminate(args.k, 'SIGINT', (err) => {
         if (err) {
-            console.error(`${FILENAME} ERROR:`, err);
+            console.log(`${FILENAME} ERROR:`, err);
         } else {
             console.log(`${FILENAME}: Executed!`);
         }

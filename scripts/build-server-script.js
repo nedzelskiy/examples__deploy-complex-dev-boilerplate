@@ -11,13 +11,14 @@ const CONSTANTS = {
 
 for (let key in CONSTANTS) {
     if (!CONSTANTS[key]) {
-        console.error(`${FILENAME}: You must set ${key} env!`);
+        console.log(`${FILENAME}: You must set ${key} env!`);
         process.exit(1);
-        return false;
     }
 }
 const fs = require('fs');
 const request = require('request');
+const { exec } = require('child_process');
+
 
 const handleResponse = (resolve, reject, error, response, body) => {
     if (error) {
@@ -35,14 +36,27 @@ const handleResponse = (resolve, reject, error, response, body) => {
 };
 
 new Promise((resolve, reject) => {
-    request(
-        {
-            uri: CONSTANTS.SERVER_APP_RESTARTER__URL,
-            headers: {'socket-control-command': 'restart-app-server'},
-            proxy: ''
-        },
-        handleResponse.bind(this, resolve, reject)
-    );
+    const child = exec('node ./scripts/run-server-tests.js', (error, stdout, stderr) => {
+        if (error) {
+            console.log(`${FILENAME}:`, stdout, stderr);
+            reject(error);
+        } else {
+            console.log(`${FILENAME}:`, stdout, stderr);
+            resolve();
+        }
+    });
+})
+.then(() => {
+    return new Promise((resolve, reject) => {
+        request(
+            {
+                uri: CONSTANTS.SERVER_APP_RESTARTER__URL,
+                headers: {'socket-control-command': 'restart-app-server'},
+                proxy: ''
+            },
+            handleResponse.bind(this, resolve, reject)
+        );
+    });
 })
 .then(() => {
     return new Promise((resolve, reject) => {
@@ -65,4 +79,4 @@ new Promise((resolve, reject) => {
     console.log('');
 
 })
-.catch(err => console.error(`${FILENAME}:`, err));
+.catch(err => console.log(`${FILENAME}:`, err));

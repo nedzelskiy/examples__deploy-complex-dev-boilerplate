@@ -3,14 +3,14 @@ const terminate = require('terminate'); // kill process with child process!
 const exitWithNonZeroCode = () => {
     terminate(process.pid, err => {
         if (err) {
-            console.error(err);
+            console.log(err);
         }
     });
 };
 
 process.on('uncaughtException', (err) => {
     console.log('==================================');
-    console.error(err);
+    console.log(err);
     console.log('==================================');
     setTimeout(exitWithNonZeroCode, 100);
 });
@@ -130,7 +130,7 @@ const exitWithZeroCode = () => {
     Promise.all(promises).then(() => {
         process.exit(0);
     }).catch(err => {
-        console.error(err);
+        console.log(err);
         setTimeout(exitWithNonZeroCode, 100);
     });
 };
@@ -139,12 +139,12 @@ const availableCommands = {
     'r': {
         run: function(pid) {
             if (!pid || !/^\d+$/.test(pid)) {
-                console.error(`Wrong argument pid for command r - restart by pid, type "help" command`);
+                console.log(`Wrong argument pid for command r - restart by pid, type "help" command`);
                 return false;
             }
             terminate(pid, err => {
                 if (err) {
-                    console.error(err);
+                    console.log(err);
                 } else {
                     if (
                            'undefined' !== typeof childrenInfoKeeper
@@ -154,7 +154,7 @@ const availableCommands = {
                     ) {
                         run([childrenInfoKeeper[pid].command], childrenInfoKeeper[pid].index);
                     } else {
-                        console.error(`Can't restart command by pid "${pid}", maybe this process already died!`);
+                        console.log(`Can't restart command by pid "${pid}", maybe this process already died!`);
                         if ('undefined' !== typeof childrenInfoKeeper[pid]) {
                             delete childrenInfoKeeper[pid];
                         }

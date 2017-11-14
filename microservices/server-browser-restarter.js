@@ -4,14 +4,13 @@ const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__
 
 const CONSTANTS = {
     SERVER_BROWSER_RESTARTER__PORT:   process.env.SERVER_BROWSER_RESTARTER__PORT,
-    SERVER_BROWSER_RESTARTER__COLOR:  process.env.SERVER_BROWSER_RESTARTER__COLOR || 'cyan'
+    SERVER_BROWSER_RESTARTER__COLOR:  process.env.SERVER_BROWSER_RESTARTER__COLOR || 'blueBright'
 };
 
 for (let key in CONSTANTS) {
     if (!CONSTANTS[key]) {
-        console.error(`${FILENAME}: You must set ${key} env!`);
+        console.log(`${FILENAME}: You must set ${key} env!`);
         process.exit(1);
-        return false;
     }
 }
 
