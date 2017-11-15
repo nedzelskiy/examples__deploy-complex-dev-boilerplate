@@ -3,3 +3,5 @@ node_modules/
 .idea
 build/
 !src/client/node_modules/
+coverage/
+

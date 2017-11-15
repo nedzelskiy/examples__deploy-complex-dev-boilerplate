@@ -48,3 +48,5 @@ server.on('request', (req, res) => {
 }).listen(SERVER__PORT, () => {
 	console.log(`Server is running on ${SERVER__URL} ${new Date()}`);
 });
+
+export default server;

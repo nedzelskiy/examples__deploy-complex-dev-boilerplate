@@ -15,7 +15,7 @@ const utils = {
 
         (type === 'info') && (textColor = 'blue');
         (type === 'warn') && (textColor = 'yellow');
-        (type === 'error') && (textColor = 'red');
+        (type === 'error' || type === 'err') && (textColor = 'red');
         console[(type === 'error') ? 'error': 'log'](
             chalk[color](`${name}:${port}`) +
             chalk[color](`--PID[${process.pid}]`) +

@@ -15,7 +15,7 @@ export class Root extends React.Component<any, any> {
             <div>
                 <h4>{ message }</h4>
                 <div>{ date.toString() }</div>
-                <Counter {...this.props} />
+                <Counter props = {{}}/>
             </div>
         )
     }

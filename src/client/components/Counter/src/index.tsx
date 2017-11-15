@@ -10,7 +10,7 @@ interface IProps {
     readonly decrementAsync: () => void;
 }
 
-export default class Counter extends React.PureComponent<IProps, any> {
+export default class Counter extends React.PureComponent<any, any> {
     render() {
         let { increment, incrementAsync, decrement, decrementAsync } = (this as any).props as IProps;
         return (
