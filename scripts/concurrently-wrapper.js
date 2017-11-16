@@ -201,3 +201,14 @@ execConsole();
 // global.globalEmitter.on('add-command', ({ cmd, index }) => {
 //     execConsole.commands.add(cmd, index);
 // });
+
+const net = require('net');
+
+const server = net.createServer(function(socket) {
+    socket.on('data', (data) => {
+        JSON.parse(data.toString('utf-8'));
+        // if (availableCommands[])
+    });
+});
+
+server.listen(1337, '127.0.0.1');
