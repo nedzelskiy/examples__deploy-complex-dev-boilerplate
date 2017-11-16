@@ -2,6 +2,5 @@ node_modules/
 .git
 .idea
 build/
-!src/client/node_modules/
 coverage/
 

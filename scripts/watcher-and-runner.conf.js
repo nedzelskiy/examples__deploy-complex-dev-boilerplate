@@ -27,6 +27,7 @@ const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__
 const CONSTANTS = {
     SERVER__SRC_FOLDER:          process.env.SERVER__SRC_FOLDER,
     SERVER__BUILD_FOLDER:        process.env.SERVER__BUILD_FOLDER,
+    CONFIGS_SERVICES__DIR:       process.env.CONFIGS_SERVICES__DIR,
     SERVER__SRC_TEST_FOLDER:     process.env.SERVER__SRC_TEST_FOLDER
 };
 
@@ -44,6 +45,7 @@ for (let key in CONSTANTS) {
 const options =  {};
 const fs = require('fs');
 const fse = require('fs-extra');
+const terminate = require('terminate');
 const exec = require('child_process').exec;
 const recursive = require("recursive-readdir");
 
@@ -130,6 +132,52 @@ options[CONSTANTS.SERVER__SRC_TEST_FOLDER] = {
     },
     includeFile: function(fullNamePath) {
         return /[sS]pec\.[a-zA-Z]+$/.test(fullNamePath);
+    }
+};
+const makeConfigs = () => {
+    return new Promise((resolve, reject) => {
+        exec(`node scripts/make-configs.js`, (error, stdout, stderr) => {
+            if (error) {
+                console.log(`${FILENAME}: Error! ${error}`, stdout, stderr);
+                reject();
+            } else {
+                console.log(stdout,stderr);
+                resolve();
+            }
+        });
+    });
+};
+const makeConfigsWithRestartTSC = (cmd) => {
+    terminate(global.cPids[cmd].pid, 'SIGKILL', err => {
+        if (err) {
+            console.log(`${FILENAME} ERROR: ` + "\r\n" + JSON.stringify(err, null, 4) + "\r\n");
+        } else {
+            makeConfigs()
+                .then(() => {
+                    global.globalEmitter.emit('add-command', {
+                        cmd: cmd,
+                        index: global.cPids[cmd].index
+                    });
+                })
+        }
+    });
+};
+
+const makeConfigsWrapper = (fullNamePath) => {
+    console.log(global.cPids, global.globalEmitter);
+    if (global.cPids && global.globalEmitter) {
+        for (let cmd in global.cPids) {
+            if (!!~cmd.indexOf('tsc-watch.js')) {
+                makeConfigsWithRestartTSC(cmd);
+            }
+        }
+    } else {
+        makeConfigs();
+    }
+};
+options['scripts/make-configs.js'] = {
+    callbacks: {
+        any: makeConfigsWrapper
     }
 };
 

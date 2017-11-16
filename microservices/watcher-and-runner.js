@@ -4,8 +4,9 @@ const path = require('path');
 const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__filename)), '');
 
 const CONSTANTS = {
-    WATCHER_AND_RUNNER__PORT:  process.env.WATCHER_AND_RUNNER__PORT,
-    WATCHER_AND_RUNNER__COLOR: process.env.WATCHER_AND_RUNNER__COLOR || 'gray'
+    WATCHER_AND_RUNNER__PORT:           process.env.WATCHER_AND_RUNNER__PORT,
+    WATCHER_AND_RUNNER__COLOR:          process.env.WATCHER_AND_RUNNER__COLOR || 'gray',
+    WATCHER_AND_RUNNER__WAY_TO_CONFIG:  process.env.WATCHER_AND_RUNNER__WAY_TO_CONFIG
 };
 
 for (let key in CONSTANTS) {
@@ -28,7 +29,7 @@ const util = require('./microservices-utils');
 const sendConsoleText = util.sendConsoleText.bind(ctx);
 
 try {
-    config = require('./watcher-and-runner.conf.js');
+    config = require(`../${CONSTANTS.WATCHER_AND_RUNNER__WAY_TO_CONFIG}`);
 } catch(err) {
     sendConsoleText(`Some problems with microservice configuration file! ${err}`, 'err');
     process.exit(1);

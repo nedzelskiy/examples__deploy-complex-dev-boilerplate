@@ -39,6 +39,9 @@ new Promise((resolve, reject) => {
     const child = exec('node ./scripts/run-server-tests.js', (error, stdout, stderr) => {
         if (error) {
             console.log(`${FILENAME}:`, stdout, stderr);
+            // if (!!~stderr.indexOf('Cannot find module')) {
+            //     resolve();
+            // }
             reject(error);
         } else {
             console.log(`${FILENAME}:`, stdout, stderr);

@@ -9,11 +9,14 @@ const exitWithNonZeroCode = () => {
 };
 
 process.on('uncaughtException', (err) => {
-    console.log('==================================');
+    console.log('========== uncaughtException =============');
     console.log(err);
-    console.log('==================================');
+    console.log('==========================================');
     setTimeout(exitWithNonZeroCode, 100);
 });
+
+const EventEmitter = require('events');
+
 
 const fs = require('fs');
 const parse = require('shell-quote').parse;
@@ -74,6 +77,12 @@ run = function (commands /* added */, oldIndex) {
         if (childrenInfoKeeper[child.pid].index * 1 !== maxIndex) {
             maxIndex = childrenInfoKeeper[child.pid].index * 1;
         }
+        if (!global.cPids)  global.cPids = {};
+        global.cPids[cmd] = {
+            pid: child.pid,
+            index: childrenInfoKeeper[child.pid].index,
+            name: name
+        };
         // ===================================== FINISH ADDED ============================
         return child;
     });
@@ -171,14 +180,24 @@ const availableCommands = {
         },
         usage: 'add [command, [index]] <> add a new command to concurrently spawn'
     },
+    'list': {
+        run: () => {
+            console.log(`\r\n\r\n ${ JSON.stringify(global.cPids, null, 4)}\r\n`);
+        },
+        usage: 'list <> show list of all pids of running process'
+    },
     'exit': {
         run: exitWithZeroCode,
         usage: 'exit <> stop watching for commands and exit script'
     }
 };
 
+
 const execConsole = require('js_console_command_executor')(availableCommands);
 
 execConsole.actions.doExit = exitWithZeroCode;
 execConsole();
 
+// global.globalEmitter.on('add-command', ({ cmd, index }) => {
+//     execConsole.commands.add(cmd, index);
+// });
