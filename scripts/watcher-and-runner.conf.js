@@ -25,10 +25,11 @@ const path = require('path');
 const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__filename)), '');
 
 const CONSTANTS = {
-    SERVER__SRC_FOLDER:          process.env.SERVER__SRC_FOLDER,
-    SERVER__BUILD_FOLDER:        process.env.SERVER__BUILD_FOLDER,
-    CONFIGS_SERVICES__DIR:       process.env.CONFIGS_SERVICES__DIR,
-    SERVER__SRC_TEST_FOLDER:     process.env.SERVER__SRC_TEST_FOLDER
+    SERVER__SRC_FOLDER:             process.env.SERVER__SRC_FOLDER,
+    SERVER__BUILD_FOLDER:           process.env.SERVER__BUILD_FOLDER,
+    CONFIGS_SERVICES__DIR:          process.env.CONFIGS_SERVICES__DIR,
+    SERVER__SRC_TEST_FOLDER:        process.env.SERVER__SRC_TEST_FOLDER,
+    CONCURRENTLY_WRAPPER__PORT:     process.env.CONCURRENTLY_WRAPPER__PORT
 };
 
 CONSTANTS.SERVER__SRC_FOLDER = path.normalize(CONSTANTS.SERVER__SRC_FOLDER);
@@ -123,7 +124,7 @@ options[CONSTANTS.SERVER__SRC_TEST_FOLDER] = {
             console.log(`${FILENAME}: run build server script...`);
             exec(`node scripts/build-server-script.js`, (error, stdout, stderr) => {
                 if (error) {
-                    console.log(`${FILENAME} ERROR:  ${error}`);
+                    console.log(`${FILENAME} ERROR:  ${error}`, stdout, stderr);
                 } else {
                     console.log(`${FILENAME}: ${stdout}`, stderr);
                 }
@@ -139,45 +140,76 @@ const makeConfigs = () => {
         exec(`node scripts/make-configs.js`, (error, stdout, stderr) => {
             if (error) {
                 console.log(`${FILENAME}: Error! ${error}`, stdout, stderr);
-                reject();
+                reject(error);
             } else {
-                console.log(stdout,stderr);
+                console.log(stdout, stderr);
                 resolve();
             }
         });
     });
 };
-const makeConfigsWithRestartTSC = (cmd) => {
-    terminate(global.cPids[cmd].pid, 'SIGKILL', err => {
-        if (err) {
-            console.log(`${FILENAME} ERROR: ` + "\r\n" + JSON.stringify(err, null, 4) + "\r\n");
-        } else {
-            makeConfigs()
-                .then(() => {
-                    global.globalEmitter.emit('add-command', {
-                        cmd: cmd,
-                        index: global.cPids[cmd].index
-                    });
-                })
-        }
+
+const getTCPResponse = (port, command, commandLine, domen) => {
+    let domen_ = domen || 'localhost';
+    return new Promise((resolve, reject) => {
+        let client = new require('net').Socket();
+        client.connect(port, domen_, () => {
+            client.write(JSON.stringify({
+                command: command,
+                commandLine: commandLine
+            }));
+        });
+        client.on('data', data => {
+            client.destroy();
+            resolve(data);
+        });
+        client.on('close', () => {
+            client.destroy();
+            reject('Server suddenly closed connection before sent data');
+        });
+        client.on('error', err => {
+            client.destroy();
+            reject(err);
+        });
     });
 };
 
-const makeConfigsWrapper = (fullNamePath) => {
-    console.log(global.cPids, global.globalEmitter);
-    if (global.cPids && global.globalEmitter) {
-        for (let cmd in global.cPids) {
-            if (!!~cmd.indexOf('tsc-watch.js')) {
-                makeConfigsWithRestartTSC(cmd);
-            }
+const makeConfigsWithRestartTSC = () => {
+    getTCPResponse(CONSTANTS.CONCURRENTLY_WRAPPER__PORT, 'getActiveProcessList', '')
+    .then(data => {
+        let message = JSON.parse(data.toString('utf-8'));
+        for (let cmd in message) {
+            if (!~cmd.indexOf('tsc-watch')) continue;
+            new Promise((resolve, reject) => {
+                terminate(message[cmd].pid, 'SIGKILL', err => {
+                    if (err) {
+                        console.log(`${FILENAME} ERROR: Can't terminate process with pid ${message[cmd].pid}. Maybe this process not exist`);
+                        console.log(`${FILENAME} ${JSON.stringify(err, null, 4) }\r\n`);
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            })
+            .then(() => {
+                return makeConfigs();
+            })
+            .then(() => {
+                getTCPResponse(CONSTANTS.CONCURRENTLY_WRAPPER__PORT, 'add', `add '${cmd}' ${message[cmd].index}`);
+            })
+            .catch(err => {
+                throw err;
+            });
         }
-    } else {
-        makeConfigs();
-    }
+    })
+    .catch(err => {
+        console.log(`${FILENAME} ERROR: Something went wrong in makeConfigsWrapper` + "\r\n" + JSON.stringify(err, null, 4) + "\r\n");
+    });
 };
+
 options['scripts/make-configs.js'] = {
     callbacks: {
-        any: makeConfigsWrapper
+        any: makeConfigsWithRestartTSC
     }
 };
 

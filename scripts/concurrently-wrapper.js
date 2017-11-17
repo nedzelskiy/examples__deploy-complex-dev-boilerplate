@@ -1,3 +1,5 @@
+const path_ = require('path');
+const FILENAME = path_.basename(__filename).replace(path_.extname(path_.basename(__filename)), '') + ` pid[${process.pid}]`;
 const terminate = require('terminate'); // kill process with child process!
 
 const exitWithNonZeroCode = () => {
@@ -15,11 +17,23 @@ process.on('uncaughtException', (err) => {
     setTimeout(exitWithNonZeroCode, 100);
 });
 
-const EventEmitter = require('events');
+const net = require('net');
+const parse = require('shell-quote').parse;
 
+const server = net.createServer(function(socket) {
+    socket.on('data', (data) => {
+        let message = JSON.parse(data.toString('utf-8'));
+        if (message && message.command && 'getActiveProcessList' === message.command) {
+            socket.write(JSON.stringify(getActiveProcessList()));
+        } else if (message && message.command && message.commandLine && availableCommands[message.command]) {
+            availableCommands[message.command].run.apply(null, parse(message.commandLine).slice(1));
+            socket.write('OK!');
+        }
+    });
+}).listen(process.env.CONCURRENTLY_WRAPPER__PORT);
+console.log(`${FILENAME}: listen ${process.env.CONCURRENTLY_WRAPPER__PORT} port`);
 
 const fs = require('fs');
-const parse = require('shell-quote').parse;
 const exec = require('child_process').exec;
 const argv = require('minimist')(process.argv.slice(2));
 
@@ -74,15 +88,12 @@ run = function (commands /* added */, oldIndex) {
             restartTries: config.restartTries,
             prefixColor: lastPrefixColor
         };
-        if (childrenInfoKeeper[child.pid].index * 1 !== maxIndex) {
+        if (childrenInfoKeeper[child.pid].index * 1 > maxIndex) {
             maxIndex = childrenInfoKeeper[child.pid].index * 1;
         }
-        if (!global.cPids)  global.cPids = {};
-        global.cPids[cmd] = {
-            pid: child.pid,
-            index: childrenInfoKeeper[child.pid].index,
-            name: name
-        };
+        child.on('exit', (signal) => {
+            delete childrenInfoKeeper[child.pid];
+        });
         // ===================================== FINISH ADDED ============================
         return child;
     });
@@ -118,8 +129,6 @@ handleClose = function(streams, children, childrenInfo) {
 };
 
 
-const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__filename)), '');
-
 config.allowRestart = false;
 config.killOthers = false;
 config.restartAfter = 0;
@@ -139,21 +148,33 @@ const exitWithZeroCode = () => {
     Promise.all(promises).then(() => {
         process.exit(0);
     }).catch(err => {
-        console.log(err);
+        console.log(`${FILENAME} ERROR: Process can't exit with "0" code! \r\n ${JSON.stringify(err, null, 4)}`);
         setTimeout(exitWithNonZeroCode, 100);
     });
+};
+
+const getActiveProcessList = () => {
+    let listOfActiveProcess = {};
+
+    for (let pid in childrenInfoKeeper) {
+        listOfActiveProcess[childrenInfoKeeper[pid].command] = {
+            pid: pid,
+            index: childrenInfoKeeper[pid].index
+        };
+    }
+    return listOfActiveProcess;
 };
 
 const availableCommands = {
     'r': {
         run: function(pid) {
             if (!pid || !/^\d+$/.test(pid)) {
-                console.log(`Wrong argument pid for command r - restart by pid, type "help" command`);
+                console.log(`${FILENAME} ERROR: Wrong argument pid for command r - restart by pid, type "help" command`);
                 return false;
             }
             terminate(pid, err => {
                 if (err) {
-                    console.log(err);
+                    console.log(`${FILENAME} ERROR: Can't terminate process ${pid}. Maybe this process already died!`);
                 } else {
                     if (
                            'undefined' !== typeof childrenInfoKeeper
@@ -163,7 +184,7 @@ const availableCommands = {
                     ) {
                         run([childrenInfoKeeper[pid].command], childrenInfoKeeper[pid].index);
                     } else {
-                        console.log(`Can't restart command by pid "${pid}", maybe this process already died!`);
+                        console.log(`${FILENAME} ERROR: Can't restart command by pid "${pid}", maybe this process already died!`);
                         if ('undefined' !== typeof childrenInfoKeeper[pid]) {
                             delete childrenInfoKeeper[pid];
                         }
@@ -175,16 +196,18 @@ const availableCommands = {
     },
     'add': {
         run: (command, index) => {
-            let newIndex = index || ++maxIndex;
+            let newIndex = index || maxIndex;
+            console.log(`${FILENAME}: added command: ${command} with index ${newIndex}`);
             run([command], newIndex);
         },
         usage: 'add [command, [index]] <> add a new command to concurrently spawn'
     },
     'list': {
         run: () => {
-            console.log(`\r\n\r\n ${ JSON.stringify(global.cPids, null, 4)}\r\n`);
+            let listOfActiveProcess = getActiveProcessList();
+            console.log(`\r\n\r\n ${ JSON.stringify(listOfActiveProcess, null, 4)}\r\n`);
         },
-        usage: 'list <> show list of all pids of running process'
+        usage: 'list <> show information of all running child process'
     },
     'exit': {
         run: exitWithZeroCode,
@@ -197,18 +220,3 @@ const execConsole = require('js_console_command_executor')(availableCommands);
 
 execConsole.actions.doExit = exitWithZeroCode;
 execConsole();
-
-// global.globalEmitter.on('add-command', ({ cmd, index }) => {
-//     execConsole.commands.add(cmd, index);
-// });
-
-const net = require('net');
-
-const server = net.createServer(function(socket) {
-    socket.on('data', (data) => {
-        JSON.parse(data.toString('utf-8'));
-        // if (availableCommands[])
-    });
-});
-
-server.listen(1337, '127.0.0.1');

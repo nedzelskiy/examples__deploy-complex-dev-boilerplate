@@ -60,6 +60,7 @@ let tsconfigServer = {
         `../${ CONSTANTS.SERVER__SRC_FOLDER }/**/*.ts`
     ]
 };
+
 // create tsconfig-client.json
 let tsconfigClient = {
     "compilerOptions": {
