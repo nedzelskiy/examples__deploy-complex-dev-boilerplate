@@ -1,4 +1,9 @@
 'use strict';
+
+/*
+* Restart server
+*/
+
 const path = require('path');
 const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__filename)), '');
 

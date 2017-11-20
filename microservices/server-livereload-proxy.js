@@ -1,4 +1,11 @@
 'use strict';
+
+/*
+ * Added developer code into response body,
+ * such as socket.io code for live reload
+ */
+
+
 const path = require('path');
 const FILENAME = path.basename(__filename).replace(path.extname(path.basename(__filename)), '');
 
@@ -60,7 +67,7 @@ http.createServer(function(req, res) {
             if (response && response.statusCode) {
                 res.statusCode = response.statusCode;
             }
-            if (!!~body.indexOf('<html')) {
+            if (/<html/i.test(body) || /<!DOCTYPE/i.test(body)) {
                 body = body + buildHtmlScript();
                 res.setHeader('content-length', body.length);
             }

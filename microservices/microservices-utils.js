@@ -1,5 +1,9 @@
 'use strict';
 
+/*
+* Common code for all microservices
+*/
+
 const chalkInstance = require('chalk');
 const chalk = new chalkInstance.constructor({enabled:true});
 
