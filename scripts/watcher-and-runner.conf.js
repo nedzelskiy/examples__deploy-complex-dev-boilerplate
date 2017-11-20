@@ -73,7 +73,7 @@ const copyAllFileFromServerToBuild = () => {
                     return false;
                 }
                 files.forEach(fileName => {
-                    fse.outputFileSync(fileName.replace(CONSTANTS.SERVER__SRC_FOLDER, CONSTANTS.SERVER__BUILD_FOLDER), fs.readFileSync(fileName, 'utf-8'));
+                    fse.outputFileSync(fileName.replace(CONSTANTS.SERVER__SRC_FOLDER, CONSTANTS.SERVER__BUILD_FOLDER), fs.readFileSync(fileName));
                 });
                 resolve(files);
             }

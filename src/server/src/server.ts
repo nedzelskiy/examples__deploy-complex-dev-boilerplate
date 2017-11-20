@@ -30,7 +30,8 @@ server.on('request', (req, res) => {
 	}
 	res.setHeader('Content-Type', 'text/html');
 	let html = ejs.render(fs.readFileSync(__dirname + '/index.ejs', 'utf-8').toString(), {
-		serverRenderText: makeResponseText()
+		serverRenderText: makeResponseText(),
+		title: 'Welcome to boilerplate'
 	});
 	res.end(html);
 }).listen(SERVER__PORT, () => {

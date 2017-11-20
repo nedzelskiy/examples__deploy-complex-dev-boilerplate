@@ -48,6 +48,16 @@ const buildHtmlScript = () => {
 };
 
 http.createServer(function(req, res) {
+    let ext = req.url.split('.').pop().toLowerCase();
+    if (
+            ext !== '/'
+        &&  ext !== 'js'
+        &&  ext !== 'html'
+        &&  ext !== 'css'
+    ) {
+        request.get(`${CONSTANTS.SERVER__URL}${req.url}`).pipe(res);
+        return;
+    }
     request(
         {
             uri: `${CONSTANTS.SERVER__URL}${req.url}`,
@@ -70,10 +80,13 @@ http.createServer(function(req, res) {
             if (/<html/i.test(body) || /<!DOCTYPE/i.test(body)) {
                 body = body + buildHtmlScript();
                 res.setHeader('content-length', body.length);
+            } else if (response.headers['content-length']){
+                res.setHeader('content-length', response.headers['content-length']);
             }
             res.end(body);
         }
     );
+
 }).listen(CONSTANTS.SERVER_LIVERELOAD_PROXY__PORT, () => {
     sendConsoleText(`Proxy server is running on ${CONSTANTS.SERVER_LIVERELOAD_PROXY__URL} ${new Date()}`);
 });
