@@ -55,7 +55,10 @@ http.createServer(function(req, res) {
         &&  ext !== 'html'
         &&  ext !== 'css'
     ) {
-        request.get(`${CONSTANTS.SERVER__URL}${req.url}`).pipe(res);
+        request.get({
+            uri: `${CONSTANTS.SERVER__URL}${req.url}`,
+            proxy: ''
+        }).pipe(res);
         return;
     }
     request(

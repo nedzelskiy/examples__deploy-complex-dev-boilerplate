@@ -1,5 +1,6 @@
 'use strict';
 
+import './styles.scss';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { getCurrentDate } from './actions';
@@ -12,7 +13,8 @@ export class Root extends React.Component<any, any> {
     render() {
         let { message,date } = this.props;
         return (
-            <div>
+            <div className={ this.constructor.name }>
+                <img src="assets/react.png" />
                 <h4>{ message }</h4>
                 <div>{ date.toString() }</div>
                 <Counter props = {{}}/>

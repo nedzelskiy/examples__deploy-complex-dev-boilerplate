@@ -37,7 +37,7 @@
     "fs-extra": "^4.0.2",
     "istanbul": "^0.4.5",
     "jasmine": "^2.8.0",
-    "js_console_command_executor": "^1.0.7",
+    "js_console_command_executor": "^1.0.8",
     "keypress": "^0.2.1",
     "mime": "^2.0.3",
     "minimist": "^1.2.0",
