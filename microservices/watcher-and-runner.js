@@ -27,7 +27,24 @@ let config = null;
 const Watcher = require('watch-fs').Watcher;
 const util = require('./microservices-utils');
 const sendConsoleText = util.sendConsoleText.bind(ctx);
+/*
+ * Example structure for options
+ *
+    options[<serve url>] = {
+        callbacks: {
+             create: () => {},
+             change: () => {},
+             delete: () => {},
+             any: () => {}   // optionally -> if exists that previous will be ignored
+        },
+        runImmediately: () => {},           // optionally task will be run Immediately
+        includeDir: (fullNamePath) => {},   // optionally
+        includeFile: (fullNamePath) => {}   // optionally
+    };
 
+    module.exports = options;
+ *
+ */
 try {
     config = require(`../${CONSTANTS.WATCHER_AND_RUNNER__WAY_TO_CONFIG}`);
 } catch(err) {

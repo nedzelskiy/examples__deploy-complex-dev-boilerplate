@@ -106,35 +106,6 @@ const deleteFilesInBuildServerFolder = (fullNamePath) => {
     });
 };
 
-options[CONSTANTS.SERVER__SRC_FOLDER] = {
-    callbacks: {
-        create: copyServerFilesFromSrcToBuild,
-        change: copyServerFilesFromSrcToBuild,
-        delete: deleteFilesInBuildServerFolder
-    },
-    runImmediately: copyServerFilesFromSrcToBuild,
-    includeFile: function(fullNamePath) {
-        return !/\.tsx?/.test(fullNamePath);
-    }
-};
-options[CONSTANTS.SERVER__SRC_TEST_FOLDER] = {
-    callbacks: {
-        any: function(fullNamePath) {
-            console.log(`${FILENAME}: Change detected with ${fullNamePath}`);
-            console.log(`${FILENAME}: run build server script...`);
-            exec(`node scripts/build-server-script.js`, (error, stdout, stderr) => {
-                if (error) {
-                    console.log(`${FILENAME} ERROR:  ${error}`, stdout, stderr);
-                } else {
-                    console.log(`${FILENAME}: ${stdout}`, stderr);
-                }
-            });
-        }
-    },
-    includeFile: function(fullNamePath) {
-        return /[sS]pec\.[a-zA-Z]+$/.test(fullNamePath);
-    }
-};
 const makeConfigs = () => {
     return new Promise((resolve, reject) => {
         exec(`node scripts/make-configs.js`, (error, stdout, stderr) => {
@@ -210,6 +181,35 @@ const makeConfigsWithRestartTSC = () => {
 options['scripts/make-configs.js'] = {
     callbacks: {
         any: makeConfigsWithRestartTSC
+    }
+};
+options[CONSTANTS.SERVER__SRC_FOLDER] = {
+    callbacks: {
+        create: (fullNamePath) => setTimeout(() => copyServerFilesFromSrcToBuild(fullNamePath), 2000),
+        change: (fullNamePath) => setTimeout(() => copyServerFilesFromSrcToBuild(fullNamePath), 2000),
+        delete: (fullNamePath) => setTimeout(() => copyServerFilesFromSrcToBuild(fullNamePath), 2000)
+    },
+    runImmediately: copyServerFilesFromSrcToBuild,
+    includeFile: function(fullNamePath) {
+        return !/\.tsx?/.test(fullNamePath);
+    }
+};
+options[CONSTANTS.SERVER__SRC_TEST_FOLDER] = {
+    callbacks: {
+        any: function(fullNamePath) {
+            console.log(`${FILENAME}: Change detected with ${fullNamePath}`);
+            console.log(`${FILENAME}: run build server script...`);
+            exec(`node scripts/build-server-script.js`, (error, stdout, stderr) => {
+                if (error) {
+                    console.log(`${FILENAME} ERROR:  ${error}`, stdout, stderr);
+                } else {
+                    console.log(`${FILENAME}: ${stdout}`, stderr);
+                }
+            });
+        }
+    },
+    includeFile: function(fullNamePath) {
+        return /[sS]pec\.[a-zA-Z]+$/.test(fullNamePath);
     }
 };
 
