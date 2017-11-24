@@ -45,9 +45,12 @@ for (let key in CONSTANTS) {
 
 const options =  {};
 const fs = require('fs');
+const gulp = require("gulp");
 const fse = require('fs-extra');
 const terminate = require('terminate');
+const gulpUglify = require("gulp-uglify");
 const exec = require('child_process').exec;
+const gulpImageMin = require("gulp-imagemin");
 const recursive = require("recursive-readdir");
 
 const deniedFilesToCopyFromServerSrcToBuild = [
