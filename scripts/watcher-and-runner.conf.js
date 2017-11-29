@@ -45,13 +45,14 @@ for (let key in CONSTANTS) {
 
 const options =  {};
 const fs = require('fs');
-const gulp = require("gulp");
 const fse = require('fs-extra');
+const imagemin = require('imagemin');
+const UglifyJS = require("uglify-js");
 const terminate = require('terminate');
-const gulpUglify = require("gulp-uglify");
 const exec = require('child_process').exec;
-const gulpImageMin = require("gulp-imagemin");
 const recursive = require("recursive-readdir");
+const imageminOptipng = require('imagemin-optipng');
+const imageminJpegtran = require('imagemin-jpegtran');
 
 const deniedFilesToCopyFromServerSrcToBuild = [
     'ts',
@@ -64,7 +65,7 @@ const copyAllFileFromServerToBuild = () => {
             CONSTANTS.SERVER__SRC_FOLDER,
             [
                 (fileName, stats) => {
-                    let ext = fileName.split('.').pop();
+                    let ext = fileName.split('.').pop().toLowerCase();
                     return !stats.isDirectory() && deniedFilesToCopyFromServerSrcToBuild.reduce((bool, extension) => {
                             return extension === ext ? !!(++bool) : !!bool
                         }, false);
@@ -75,19 +76,66 @@ const copyAllFileFromServerToBuild = () => {
                     reject(err);
                     return false;
                 }
+                let promises = [];
                 files.forEach(fileName => {
-                    fse.outputFileSync(fileName.replace(CONSTANTS.SERVER__SRC_FOLDER, CONSTANTS.SERVER__BUILD_FOLDER), fs.readFileSync(fileName));
+                    promises.push(
+                        copyFilesWithFilters(fileName.replace(CONSTANTS.SERVER__SRC_FOLDER, CONSTANTS.SERVER__BUILD_FOLDER), fileName)
+                    );
                 });
-                resolve(files);
+                Promise.all(promises)
+                    .then(() => {
+                        resolve(files);
+                    })
+                    .catch(reject);
             }
         );
     });
 };
 
+const copyFilesWithFilters = (to, from, options) => {
+    let ext = from.split('.').pop().toLowerCase()
+        ,file = fs.readFileSync(from)
+        ;
+    if (
+            ext === 'jpg'
+        ||  ext === 'png'
+        ||  ext === 'gif'
+        ||  ext === 'jpeg'
+        ||  ext === 'bmp'
+        ||  ext === 'tiff'
+    ) {
+        return new Promise((resolve, reject) => {
+            imagemin.buffer(file, {
+                plugins: [
+                    // imageminJpegtran(),
+                    // imageminOptipng()
+                ]
+            })
+            .then((buffer) => {
+                fse.outputFileSync(to, buffer);
+                resolve();
+            })
+            .catch(reject);
+        });
+    } else if ( ext === 'js' ) {
+        UglifyJS.minify(file);
+        fse.outputFileSync(to, file);
+    } else {
+        fse.outputFileSync(to, file);
+        return Promise.resolve();
+    }
+};
+
+
 const copyFileFromServerToBuild = (fullNamePath) => {
-    let ext = fullNamePath.split('.').pop();
-    fse.outputFileSync(fullNamePath.replace(CONSTANTS.SERVER__SRC_FOLDER, CONSTANTS.SERVER__BUILD_FOLDER), fs.readFileSync(fullNamePath, 'utf-8'));
-    return Promise.resolve([fullNamePath]);
+    return new Promise((resolve, reject) => {
+        copyFilesWithFilters(fullNamePath.replace(CONSTANTS.SERVER__SRC_FOLDER, CONSTANTS.SERVER__BUILD_FOLDER), fullNamePath)
+            .then(() => {
+                resolve([fullNamePath]);
+            })
+            .catch(reject);
+
+    });
 };
 
 const copyServerFilesFromSrcToBuild = (fullNamePath) => {
@@ -100,6 +148,9 @@ const copyServerFilesFromSrcToBuild = (fullNamePath) => {
                 console.log(`${FILENAME}: Error! ${error}`, stdout, stderr);
             }
         });
+    })
+    .catch(err => {
+        console.log(`${FILENAME} ERROR: Something went wrong in makeConfigsWrapper` + "\r\n" + JSON.stringify(err, null, 4) + "\r\n");
     });
 };
 
@@ -111,7 +162,7 @@ const deleteFilesInBuildServerFolder = (fullNamePath) => {
 
 const makeConfigs = () => {
     return new Promise((resolve, reject) => {
-        exec(`node scripts/make-configs.js`, (error, stdout, stderr) => {
+        exec(`node scripts/make-server-configs.js`, (error, stdout, stderr) => {
             if (error) {
                 console.log(`${FILENAME}: Error! ${error}`, stdout, stderr);
                 reject(error);
@@ -148,53 +199,76 @@ const getTCPResponse = (port, command, commandLine, domen) => {
     });
 };
 
-const makeConfigsWithRestartTSC = () => {
-    getTCPResponse(CONSTANTS.CONCURRENTLY_WRAPPER__PORT, 'getActiveProcessList', '')
-    .then(data => {
-        let message = JSON.parse(data.toString('utf-8'));
-        for (let cmd in message) {
-            if (!~cmd.indexOf('tsc-watch')) continue;
-            new Promise((resolve, reject) => {
-                terminate(message[cmd].pid, 'SIGKILL', err => {
-                    if (err) {
-                        console.log(`${FILENAME} ERROR: Can't terminate process with pid ${message[cmd].pid}. Maybe this process not exist`);
-                        console.log(`${FILENAME} ${JSON.stringify(err, null, 4) }\r\n`);
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
+
+const restartConcurrentlyWrapperProcess = (strCommand) => {
+    return new Promise((resolve, reject) => {
+        getTCPResponse(CONSTANTS.CONCURRENTLY_WRAPPER__PORT, 'getActiveProcessList', '')
+        .then(data => {
+            let message = JSON.parse(data.toString('utf-8'));
+            for (let cmd in message) {
+                if (!~cmd.indexOf(strCommand)) continue;
+                new Promise((resolve, reject) => {
+                    terminate(message[cmd].pid, 'SIGKILL', err => {
+                        if (err) {
+                            console.log(`${FILENAME} ERROR: Can't terminate process with pid ${message[cmd].pid}. Maybe this process not exist`);
+                            console.log(`${FILENAME} ${JSON.stringify(err, null, 4) }\r\n`);
+                            reject(err);
+                        } else {
+                            resolve();
+                        }
+                    });
+                })
+                .then(() => {
+                    getTCPResponse(CONSTANTS.CONCURRENTLY_WRAPPER__PORT, 'add', `add '${cmd}' ${message[cmd].index}`);
+                })
+                .catch(err => {
+                    throw err;
                 });
-            })
-            .then(() => {
-                return makeConfigs();
-            })
-            .then(() => {
-                getTCPResponse(CONSTANTS.CONCURRENTLY_WRAPPER__PORT, 'add', `add '${cmd}' ${message[cmd].index}`);
-            })
-            .catch(err => {
-                throw err;
-            });
-        }
-    })
-    .catch(err => {
-        console.log(`${FILENAME} ERROR: Something went wrong in makeConfigsWrapper` + "\r\n" + JSON.stringify(err, null, 4) + "\r\n");
+            }
+        })
+        .catch(err => {
+            console.log(`${FILENAME} ERROR: Something went wrong in makeConfigsWrapper` + "\r\n" + JSON.stringify(err, null, 4) + "\r\n");
+            reject(err);
+        });
     });
 };
 
-options['scripts/make-configs.js'] = {
+options['scripts/make-server-configs.js'] = {
     callbacks: {
-        any: makeConfigsWithRestartTSC
+        any: () => {
+            restartConcurrentlyWrapperProcess('ts-server');
+        }
+    }
+};
+options['scripts/make-client-configs.js'] = {
+    callbacks: {
+        any: () => {
+            restartConcurrentlyWrapperProcess('webpack-client');
+        }
+    }
+};
+options[`${CONSTANTS.CONFIGS_SERVICES__DIR}/webpack-client.conf.js`] = {
+    callbacks: {
+        any: () => {
+            restartConcurrentlyWrapperProcess('webpack-client');
+        }
     }
 };
 options[CONSTANTS.SERVER__SRC_FOLDER] = {
     callbacks: {
-        create: (fullNamePath) => setTimeout(() => copyServerFilesFromSrcToBuild(fullNamePath), 2000),
-        change: (fullNamePath) => setTimeout(() => copyServerFilesFromSrcToBuild(fullNamePath), 2000),
-        delete: (fullNamePath) => setTimeout(() => copyServerFilesFromSrcToBuild(fullNamePath), 2000)
+        create: copyServerFilesFromSrcToBuild,
+        change: copyServerFilesFromSrcToBuild,
+        delete: deleteFilesInBuildServerFolder
     },
     runImmediately: copyServerFilesFromSrcToBuild,
     includeFile: function(fullNamePath) {
-        return !/\.tsx?/.test(fullNamePath);
+        let ext = fullNamePath.split('.').pop().toLowerCase();
+        return ![
+            'tsx',
+            'crdownload'
+        ].reduce((bool, extension) => {
+            return extension === ext ? !!(++bool) : !!bool
+        }, false);
     }
 };
 options[CONSTANTS.SERVER__SRC_TEST_FOLDER] = {

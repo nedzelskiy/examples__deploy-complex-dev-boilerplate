@@ -1,3 +1,3 @@
 #!/bin/bash
-eval `grep "^export " ./scripts/env.sh` && \
+eval `grep "^export " ./sh/env.sh` && \
 node node_modules/istanbul/lib/cli.js cover scripts/run-server-tests.js

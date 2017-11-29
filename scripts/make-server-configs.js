@@ -61,38 +61,6 @@ let tsconfigServer = {
     ]
 };
 
-// create tsconfig-client.json
-let tsconfigClient = {
-    "compilerOptions": {
-        "sourceMap": true,
-        "noImplicitAny": true,
-        "moduleResolution": "node",
-        "module": "commonjs",
-        "removeComments": true,
-        "target": "es5",
-        "jsx" :  "react",
-        "allowJs": true,
-        "strictNullChecks": true,
-        "types": [
-            "node"
-        ],
-        "typeRoots": [
-            "../node_modules/@types",
-            "../@types"
-        ],
-        "lib": [
-            "dom",
-            "es2015",
-            "es5",
-            "es6"
-        ]
-    },
-    "include": [
-        `../${ CONSTANTS.CLIENT__SRC_FOLDER }/**/*.ts`
-    ]
-};
-
-fs.writeFileSync(`${CONSTANTS.CONFIGS_SERVICES__DIR}/tsconfig-client.json`, JSON.stringify(tsconfigClient, null, 4));
 fs.writeFileSync(`${CONSTANTS.CONFIGS_SERVICES__DIR}/tsconfig-server.json`, JSON.stringify(tsconfigServer, null, 4));
 
 console.log(`${FILENAME}: configs created!`);
