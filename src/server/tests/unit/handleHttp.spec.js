@@ -11,11 +11,16 @@ mock('fs', {
         if (!!~str.indexOf('file.404')) {
             throw new Error();
         }
-        return str;
+        return JSON.stringify(str);
     }
 });
 mock('mime', {
     getType: (str) => {
+        return str;
+    }
+});
+mock('md5-file', {
+    sync: (str) => {
         return str;
     }
 });
@@ -30,7 +35,9 @@ const mockRes = {
     },
     setStatus: 200,
     end: (str) => {
-        mockRes.body = str.replace(/[\s\t\r\n]+/, ' ');
+        if (str) {
+            mockRes.body = str.replace(/[\s\t\r\n]+/, ' ');
+        }
     }
 };
 
@@ -59,7 +66,6 @@ describe(`${FILENAME}`, () => {
             url: '/file.404'
         }, mockRes);
         expect(mockRes.setStatus).to.be.equal(404);
-        expect(mockRes.body).to.be.equal('Not found!');
         next();
     });
 });

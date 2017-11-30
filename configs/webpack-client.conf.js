@@ -16,23 +16,23 @@ for (let key in CONSTANTS) {
     }
 }
 
+const fs = require('fs');
 const webpack = require('webpack');
-const WebpackChunkHash = require('webpack-chunk-hash');
 const WebpackShellPlugin = require('webpack-shell-plugin');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const CssoWebpackPlugin = require('csso-webpack-plugin').default;
-const ChunkManifestPlugin = require('chunk-manifest-webpack-plugin');
+const UnminifiedWebpackPlugin = require('unminified-webpack-plugin');
 
 console.log(`${FILENAME}: webpack config running! PID:[${process.pid}]`);
 
+let output  = path.normalize(__dirname + `/../${CONSTANTS.CLIENT__BUILD_FOLDER}`);
 let config = {
     entry: {
-      "client-bundle" : path.normalize(__dirname + `/../${CONSTANTS.CLIENT__SRC_FOLDER}/client.tsx`)  ,
-      "client-bundle.min" : path.normalize(__dirname + `/../${CONSTANTS.CLIENT__SRC_FOLDER}/client.tsx`)
+      "client-bundle" : path.normalize(__dirname + `/../${CONSTANTS.CLIENT__SRC_FOLDER}/client.tsx`)
     },
     output: {
-        path: path.normalize(__dirname + `/../${CONSTANTS.CLIENT__BUILD_FOLDER}`),
-        filename: '[name].[chunkhash].js',
+        path: output,
+        filename: '[name].min.js',
         library: 'App'
     },
     watch: true,
@@ -75,22 +75,13 @@ let config = {
     },
     plugins: [
         new webpack.optimize.ModuleConcatenationPlugin(),
-        new webpack.HashedModuleIdsPlugin(),
-        new WebpackChunkHash(),
-        new ChunkManifestPlugin({
-            filename: 'chunk-manifest.json',
-            manifestVariable: 'webpackManifest',
-            inlineManifest: true,
-        }),
         new ExtractTextPlugin({
-            filename: "client-bundle.[chunkhash].css"
+            filename: "[name].css"
         }),
-        new CssoWebpackPlugin({ pluginOutputPostfix: 'min' }),
         new WebpackShellPlugin({
-            onBuildExit:['node ./scripts/build-client-script.js']
+            onBuildExit: ['node ./scripts/build-client-script.js']
         }),
         new webpack.optimize.UglifyJsPlugin({
-            include: /\.min\.js$/,
             compress: {
                 warnings: false,
                 keep_fnames: true
@@ -102,12 +93,16 @@ let config = {
             sourceMap: true,
             minimize: true
         }),
+        new UnminifiedWebpackPlugin({
+            exclude: /\.css$/
+        }),
+        new CssoWebpackPlugin({ pluginOutputPostfix: 'min' }),
         new webpack.DefinePlugin({
             'process.env': {
                 'NODE_ENV': JSON.stringify('production')
             }
         }),
-        new webpack.optimize.AggressiveMergingPlugin()//Merge chunks
+        new webpack.optimize.AggressiveMergingPlugin()
     ],
     devtool: 'source-map'
 };

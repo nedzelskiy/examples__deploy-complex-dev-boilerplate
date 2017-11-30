@@ -47,6 +47,7 @@ const options =  {};
 const fs = require('fs');
 const fse = require('fs-extra');
 const imagemin = require('imagemin');
+const CleanCSS = require('clean-css');
 const UglifyJS = require("uglify-js");
 const terminate = require('terminate');
 const exec = require('child_process').exec;
@@ -54,6 +55,9 @@ const recursive = require("recursive-readdir");
 const imageminOptipng = require('imagemin-optipng');
 const imageminJpegtran = require('imagemin-jpegtran');
 
+const cleanCSSS = new CleanCSS({
+    sourceMap: true
+});
 const deniedFilesToCopyFromServerSrcToBuild = [
     'ts',
     'tsx'
@@ -106,20 +110,30 @@ const copyFilesWithFilters = (to, from, options) => {
     ) {
         return new Promise((resolve, reject) => {
             imagemin.buffer(file, {
-                plugins: [
-                    // imageminJpegtran(),
-                    // imageminOptipng()
-                ]
+                // plugins: [
+                // imageminJpegtran(),
+                // imageminOptipng()
+                // ]
             })
-            .then((buffer) => {
-                fse.outputFileSync(to, buffer);
-                resolve();
-            })
-            .catch(reject);
+                .then((buffer) => {
+                    fse.outputFileSync(to, buffer);
+                    resolve();
+                })
+                .catch(reject);
         });
+    } else if ( ext === 'css' ) {
+        let filePath = to.split('.', to.split('.').length - 1).join('.');
+        // console.log('filePath', filePath, filePath.split(path.delimiter));
+        let fileName = filePath.split(path.delimiter).pop();
+        fse.outputFileSync(to, file);
+        let result = cleanCSSS.minify(file);
+        fse.outputFileSync(`${ filePath }.min.css`, result.styles + `/*# sourceMappingURL=${fileName}.min.css.map*/`);
+        fse.outputFileSync(`${ filePath }.min.css.map`, result.sourceMap);
+        return Promise.resolve();
     } else if ( ext === 'js' ) {
         UglifyJS.minify(file);
         fse.outputFileSync(to, file);
+        return Promise.resolve();
     } else {
         fse.outputFileSync(to, file);
         return Promise.resolve();
@@ -150,7 +164,7 @@ const copyServerFilesFromSrcToBuild = (fullNamePath) => {
         });
     })
     .catch(err => {
-        console.log(`${FILENAME} ERROR: Something went wrong in makeConfigsWrapper` + "\r\n" + JSON.stringify(err, null, 4) + "\r\n");
+        console.log(`${FILENAME} ERROR: Something went wrong in copyServerFilesFromSrcToBuild` + "\r\n" + JSON.stringify(err, null, 4) + "\r\n");
     });
 };
 
@@ -201,7 +215,7 @@ const getTCPResponse = (port, command, commandLine, domen) => {
 
 
 const restartConcurrentlyWrapperProcess = (strCommand) => {
-    return new Promise((resolve, reject) => {
+     new Promise((resolve, reject) => {
         getTCPResponse(CONSTANTS.CONCURRENTLY_WRAPPER__PORT, 'getActiveProcessList', '')
         .then(data => {
             let message = JSON.parse(data.toString('utf-8'));
@@ -219,7 +233,10 @@ const restartConcurrentlyWrapperProcess = (strCommand) => {
                     });
                 })
                 .then(() => {
-                    getTCPResponse(CONSTANTS.CONCURRENTLY_WRAPPER__PORT, 'add', `add '${cmd}' ${message[cmd].index}`);
+                    getTCPResponse(CONSTANTS.CONCURRENTLY_WRAPPER__PORT, 'add', `add '${cmd}' ${message[cmd].index}`)
+                        .catch(err => {
+                            throw err;
+                        });
                 })
                 .catch(err => {
                     throw err;
@@ -227,8 +244,8 @@ const restartConcurrentlyWrapperProcess = (strCommand) => {
             }
         })
         .catch(err => {
-            console.log(`${FILENAME} ERROR: Something went wrong in makeConfigsWrapper` + "\r\n" + JSON.stringify(err, null, 4) + "\r\n");
-            reject(err);
+            console.log(`${FILENAME} ERROR: Something went wrong in restartConcurrentlyWrapperProcess` + "\r\n" + JSON.stringify(err, null, 4) + "\r\n");
+            resolve();
         });
     });
 };
@@ -264,6 +281,7 @@ options[CONSTANTS.SERVER__SRC_FOLDER] = {
     includeFile: function(fullNamePath) {
         let ext = fullNamePath.split('.').pop().toLowerCase();
         return ![
+            'ts',
             'tsx',
             'crdownload'
         ].reduce((bool, extension) => {

@@ -31,7 +31,6 @@
     "@types/webpack": "^3.0.13",
     "chai": "^4.1.2",
     "chalk": "^2.3.0",
-    "chunk-manifest-webpack-plugin": "^1.1.2",
     "clean-css": "^4.1.9",
     "concurrently": "^3.5.0",
     "css-loader": "^0.28.7",
@@ -46,6 +45,7 @@
     "jpegtran-bin": "^3.2.0",
     "js_console_command_executor": "^1.0.8",
     "keypress": "^0.2.1",
+    "md5-file": "^3.2.3",
     "mime": "^2.0.3",
     "minimist": "^1.2.0",
     "mock-require": "^2.0.2",
@@ -72,9 +72,9 @@
     "tsc-watch": "^1.0.8",
     "typescript": "^2.5.2",
     "uglify-js": "^3.2.0",
+    "unminified-webpack-plugin": "^1.4.2",
     "watch-fs": "0.0.7",
     "webpack": "^3.6.0",
-    "webpack-chunk-hash": "^0.5.0",
     "webpack-shell-plugin": "^0.5.0"
   },
   "dependencies": {
