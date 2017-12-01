@@ -38,6 +38,10 @@ const handleHttp = (req: any, res: any) => {
         fileName = 'server-styles.min.css';
         hash = md5File.sync(path.normalize(__dirname + `/assets/${fileName}`));
         cssServerHash = hash;
+
+        fileName = 'server-js.min.js';
+        hash = md5File.sync(path.normalize(__dirname + `/assets/${fileName}`));
+        jsServerHash = hash;
     } catch(err) {
         console.log(`SERVER ERROR: Can\'t find ${ fileName } for md5 hash!`);
     }

@@ -4,19 +4,23 @@
  * Here you can define folders and files that will be watched and define a callbacks
  * that will be run if in those folders or files change smth
  *
- * Example structure for options
+ * Example structure for options see more for 'node-watch' npm package manual
  *
-    options[<serve url>] = {
-        callbacks: {
-            create: () => {},
-            change: () => {},
-            delete: () => {},
-            any: () => {}   // optionally -> if exists that previous will be ignored
-        },
-        runImmediately: () => {},       // optionally task will be run Immediately
-        includeDir: (fullNamePath) => {},   // optionally
-        includeFile: (fullNamePath) => {}   // optionally
-    };
+        options[<serve url>] = {
+            options: {             // optionally = options for node-watch
+                persistent: <Boolean> default = true
+                recursive: <Boolean> default = true
+                encoding: <String> default = 'utf8'
+            },
+            callbacks: {
+                update: () => {}, // included create and change events
+                remove: () => {}
+            },
+            runImmediately: () => {},       // optionally task will be run Immediately
+            filter: (fullNamePath) => {},   // optionally filter watching files
+        };
+
+        module.exports = options;
  *
  * You can build this file with any rules and also without process env variables
 */
@@ -99,6 +103,8 @@ const copyAllFileFromServerToBuild = () => {
 const copyFilesWithFilters = (to, from, options) => {
     let ext = from.split('.').pop().toLowerCase()
         ,file = fs.readFileSync(from)
+        ,filePath = to.split('.', to.split('.').length - 1).join('.')
+        ,fileName = filePath.split(path.sep).pop()
         ;
     if (
             ext === 'jpg'
@@ -110,28 +116,49 @@ const copyFilesWithFilters = (to, from, options) => {
     ) {
         return new Promise((resolve, reject) => {
             imagemin.buffer(file, {
-                // plugins: [
-                // imageminJpegtran(),
-                // imageminOptipng()
-                // ]
+                plugins: [
+                    imageminJpegtran(),
+                    imageminOptipng()
+                ]
             })
+            .then((buffer) => {
+                fse.outputFileSync(to, buffer);
+                resolve();
+            })
+            .catch(err => {
+                console.log(`${FILENAME}: Error! ${ JSON.stringify(err, null, 4)}`);
+                imagemin.buffer(file)
                 .then((buffer) => {
                     fse.outputFileSync(to, buffer);
                     resolve();
                 })
                 .catch(reject);
+            });
         });
     } else if ( ext === 'css' ) {
-        let filePath = to.split('.', to.split('.').length - 1).join('.');
-        let fileName = filePath.split(path.sep).pop();
         fse.outputFileSync(to, file);
         let result = cleanCSSS.minify(file);
         fse.outputFileSync(`${ filePath }.min.css`, result.styles + `/*# sourceMappingURL=${fileName}.min.css.map*/`);
         fse.outputFileSync(`${ filePath }.min.css.map`, result.sourceMap);
         return Promise.resolve();
     } else if ( ext === 'js' ) {
-        UglifyJS.minify(file);
+        let res = UglifyJS.minify(file.toString('utf-8'), {
+            compress: {
+                keep_fnames: true
+            },
+            mangle: {
+                keep_fnames: true
+            },
+            sourceMap: true
+        });
+        fs.writeFileSync('11111.txt', JSON.stringify(res, null,4));
+        if (res.error) {
+            console.log(`${FILENAME}: Error while trying minify js file ${ fileName }.${ ext}! ${ JSON.stringify(res.error, null, 4)}`);
+            return Promise.resolve();
+        }
         fse.outputFileSync(to, file);
+        fse.outputFileSync(`${ filePath }.min.js`, res.code + `/*# sourceMappingURL=${fileName}.min.js.map*/`);
+        fse.outputFileSync(`${ filePath }.min.js.map`, res.map);
         return Promise.resolve();
     } else {
         fse.outputFileSync(to, file);
@@ -255,85 +282,104 @@ const copyPackageJson = (fullNamePath) => {
     console.log(`${FILENAME}: package.json file copied!`);
 };
 
+const runServerTests = (fullNamePath) => {
+    console.log(`${FILENAME}: Change detected with ${fullNamePath}`);
+    console.log(`${FILENAME}: run build server script...`);
+    exec(`node scripts/build-server-script.js`, (error, stdout, stderr) => {
+        if (error) {
+            console.log(`${FILENAME} ERROR:  ${error}`, stdout, stderr);
+        } else {
+            console.log(`${FILENAME}: ${stdout}`, stderr);
+        }
+    });
+};
+
+
 options['scripts/make-server-configs.js'] = {
     callbacks: {
-        any: () => {
+        update: () => {
+            restartConcurrentlyWrapperProcess('ts-server');
+        },
+        remove: () => {
             restartConcurrentlyWrapperProcess('ts-server');
         }
     }
 };
 options['scripts/make-client-configs.js'] = {
     callbacks: {
-        any: () => {
+        update: () => {
+            restartConcurrentlyWrapperProcess('webpack-client');
+        },
+        remove: () => {
             restartConcurrentlyWrapperProcess('webpack-client');
         }
     }
 };
 options[`${CONSTANTS.CONFIGS_SERVICES__DIR}/webpack-client.conf.js`] = {
     callbacks: {
-        any: () => {
+        update: () => {
+            restartConcurrentlyWrapperProcess('webpack-client');
+        },
+        remove: () => {
             restartConcurrentlyWrapperProcess('webpack-client');
         }
     }
 };
 options[CONSTANTS.SERVER__SRC_FOLDER] = {
     callbacks: {
-        create: copyServerFilesFromSrcToBuild,
-        change: copyServerFilesFromSrcToBuild,
-        delete: deleteFilesInBuildServerFolder
+        update: copyServerFilesFromSrcToBuild,
+        remove: deleteFilesInBuildServerFolder
     },
     runImmediately: copyServerFilesFromSrcToBuild,
-    includeFile: function(fullNamePath) {
-        let ext = fullNamePath.split('.').pop().toLowerCase();
-        return ![
-            'ts',
-            'tsx',
-            'crdownload'
-        ].reduce((bool, extension) => {
-            return extension === ext ? !!(++bool) : !!bool
-        }, false);
+    filter: function (fullNamePath) {
+        try {
+            let ext = fullNamePath.split('.').pop().toLowerCase();
+            return (
+                    ![
+                        'ts',
+                        'tsx',
+                        'crdownload'
+                    ].reduce((bool, extension) => {
+                        return extension === ext ? !!(++bool) : !!bool
+                    }, false)
+
+                && !fs.statSync(fullNamePath).isDirectory()
+            );
+        } catch (err) {
+            if (err.code.toUpperCase() !== 'ENOENT') {
+                console.log(`${FILENAME} ERR: ${ JSON.stringify(err, null, 4) }`);
+                return false;
+            }
+            return true;
+        }
     }
 };
+
 options[CONSTANTS.SERVER__SRC_TEST_FOLDER] = {
     callbacks: {
-        any: function(fullNamePath) {
-            console.log(`${FILENAME}: Change detected with ${fullNamePath}`);
-            console.log(`${FILENAME}: run build server script...`);
-            exec(`node scripts/build-server-script.js`, (error, stdout, stderr) => {
-                if (error) {
-                    console.log(`${FILENAME} ERROR:  ${error}`, stdout, stderr);
-                } else {
-                    console.log(`${FILENAME}: ${stdout}`, stderr);
-                }
-            });
-        }
+        update: runServerTests,
+        remove: runServerTests,
     },
-    includeFile: function(fullNamePath) {
-        return /[sS]pec\.[a-zA-Z]+$/.test(fullNamePath);
+    filter: function (fullNamePath) {
+        try {
+            return /[sS]pec\.[a-zA-Z]+$/.test(fullNamePath) && !fs.statSync(fullNamePath).isDirectory();
+        } catch (err) {
+            if (err.code.toUpperCase() !== 'ENOENT') {
+                console.log(`${FILENAME} ERR: ${ JSON.stringify(err, null, 4) }`);
+                return false;
+            }
+            return true;
+        }
     }
 };
-// const watch = require('node-watch');
-// const watcher = watch(`${ process.env.pwd }/coverage`, { recursive: true });
-// watcher.on('change', function(evt, name) {
-//     console.log('change', evt, name);
-// });
-// watcher.on('update', function(evt, name) {
-//     console.log('update', evt, name);
-// });
-// watcher.on('remove', function(evt, name) {
-//     console.log('remove', evt, name);
-// });
-// watcher.on('create', function(evt, name) {
-//     console.log('create', evt, name);
-// });
-// options[`${ process.env.pwd }/package.json`] = {
-//     callbacks: {
-//         create: () => { console.log('create')},//copyPackageJson,
-//         change: () => { console.log('change')},//copyPackageJson,
-//         delete: () => { console.log('delete')},
-//     },
-//     runImmediately: () => {console.log('imidiatly') }//copyPackageJson
-// };
+
+options[`${ process.env.pwd }/package.json`] = {
+    callbacks: {
+        update: copyPackageJson,
+        remove: copyPackageJson
+    },
+    runImmediately: copyPackageJson
+};
 
 
 module.exports = options;

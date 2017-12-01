@@ -24,22 +24,24 @@ const ctx = {
 };
 
 let config = null;
-const Watcher = require('watch-fs').Watcher;
+const watch = require('node-watch');
 const util = require('./microservices-utils');
 const sendConsoleText = util.sendConsoleText.bind(ctx);
 /*
- * Example structure for options
+ * Example structure for options see more for 'node-watch' npm package manual
  *
     options[<serve url>] = {
-        callbacks: {
-             create: () => {},
-             change: () => {},
-             delete: () => {},
-             any: () => {}   // optionally -> if exists that previous will be ignored
+        options: {            // optionally = options for node-watch
+            persistent: <Boolean> default = true
+            recursive: <Boolean> default = true
+            encoding: <String> default = 'utf8'
         },
-        runImmediately: () => {},           // optionally task will be run Immediately
-        includeDir: (fullNamePath) => {},   // optionally
-        includeFile: (fullNamePath) => {}   // optionally
+        callbacks: {
+             update: () => {}, // included create and change events
+             remove: () => {}
+        },
+        runImmediately: () => {},       // optionally task will be run Immediately
+        filter: (fullNamePath) => {},   // optionally filter watching files
     };
 
     module.exports = options;
@@ -56,8 +58,9 @@ let immediatelyTasks = [];
 try {
     for (let url in config) {
         let watcherOptions = {
-            paths: [url],
-            filters: {}
+            persistent: true,
+            recursive: true,
+            encoding: 'utf8'
         };
         if (config[url].includeDir && typeof config[url].includeDir === 'function') {
             watcherOptions.filters.includeDir = config[url].includeDir;
@@ -65,35 +68,33 @@ try {
         if (config[url].includeFile && typeof config[url].includeFile === 'function') {
             watcherOptions.filters.includeFile = config[url].includeFile;
         }
-        let watcher = new Watcher(watcherOptions);
         if (config[url].runImmediately && typeof config[url].runImmediately === 'function') {
             immediatelyTasks.push(config[url].runImmediately);
         }
-        if (config[url].callbacks.any && typeof config[url].callbacks.any === 'function') {
-            watcher.on('any', fullNamePath => {
-                config[url].callbacks.any(fullNamePath);
-            });
-        } else {
-            if (!config[url].callbacks.create || typeof config[url].callbacks.create !== 'function' ) {
-                throw new Error(`You must define callback for "create" action`);
-            }
-            if (!config[url].callbacks.change || typeof config[url].callbacks.change !== 'function' ) {
-                throw new Error(`You must define callback for "change" action`);
-            }
-            if (!config[url].callbacks.delete || typeof config[url].callbacks.delete !== 'function' ) {
-                throw new Error(`You must define callback for "delete" action`);
-            }
-            watcher.on('create', fullNamePath => {
-                config[url].callbacks.create(fullNamePath);
-            });
-            watcher.on('change', fullNamePath => {
-                config[url].callbacks.change(fullNamePath);
-            });
-            watcher.on('delete', fullNamePath => {
-                config[url].callbacks.delete(fullNamePath);
-            });
+        if (!config[url].callbacks.update || typeof config[url].callbacks.update !== 'function' ) {
+            throw new Error(`You must define callback for "update" action`);
         }
-        watcher.start((err, failed) => {});
+        if (!config[url].callbacks.remove || typeof config[url].callbacks.remove !== 'function' ) {
+            throw new Error(`You must define callback for "remove" action`);
+        }
+        if (config[url].options) {
+            watcherOptions = config[url].options;
+        }
+        if (config[url].filter) {
+            watcherOptions.filter = config[url].filter;
+        }
+        watch(url, watcherOptions, (evt, fullNamePath) => {
+            if (evt === 'update') {
+                // on create or modify
+                sendConsoleText(`created or modified file: ${fullNamePath}`);
+                config[url].callbacks.update(fullNamePath);
+            }
+            if (evt === 'remove') {
+                // on delete
+                sendConsoleText(`removed file: ${fullNamePath}`);
+                config[url].callbacks.remove(fullNamePath);
+            }
+        });
     }
     immediatelyTasks.forEach(task => {
         if (typeof task === 'function') {

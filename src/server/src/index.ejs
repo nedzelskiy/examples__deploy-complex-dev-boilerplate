@@ -11,8 +11,10 @@
 <body>
 <img src="/assets/ts.png" />
 <img src="/assets/nodejs.png" />
-<div><%= serverRenderText %></div>
+<div class="server-js"></div>
+<div class="server-text"><%= serverRenderText %></div>
 <div id="root"></div>
-<script type="text/javascript" src="./client/client-bundle.min.js?<%= jsClientHash %>"></script>
+<script type="text/javascript" src="/assets/server-js.min.js?<%= jsServerHash %>"></script>
+<script type="text/javascript" src="/client/client-bundle.min.js?<%= jsClientHash %>"></script>
 </body>
 </html>
