@@ -123,8 +123,7 @@ const copyFilesWithFilters = (to, from, options) => {
         });
     } else if ( ext === 'css' ) {
         let filePath = to.split('.', to.split('.').length - 1).join('.');
-        // console.log('filePath', filePath, filePath.split(path.delimiter));
-        let fileName = filePath.split(path.delimiter).pop();
+        let fileName = filePath.split(path.sep).pop();
         fse.outputFileSync(to, file);
         let result = cleanCSSS.minify(file);
         fse.outputFileSync(`${ filePath }.min.css`, result.styles + `/*# sourceMappingURL=${fileName}.min.css.map*/`);
@@ -156,7 +155,7 @@ const copyServerFilesFromSrcToBuild = (fullNamePath) => {
     let promise_ = (fullNamePath) ? copyFileFromServerToBuild(fullNamePath) : copyAllFileFromServerToBuild();
     promise_
     .then((files)=> {
-        console.log(`${FILENAME}: static files copied! ${files.toString()}`);
+        console.log(`${FILENAME}: static files copied:\r\n${files.join('\r\n')}`);
         exec(`node scripts/request-refresh-browser-script.js`, (error, stdout, stderr) => {
             if (error) {
                 console.log(`${FILENAME}: Error! ${error}`, stdout, stderr);
@@ -250,6 +249,12 @@ const restartConcurrentlyWrapperProcess = (strCommand) => {
     });
 };
 
+const copyPackageJson = (fullNamePath) => {
+    let file = fs.readFileSync(path.normalize(`${ process.env.pwd }/package.json`));
+    fse.outputFileSync(path.normalize(`${process.env.pwd}/${ CONSTANTS.SERVER__BUILD_FOLDER }/package.json`), file);
+    console.log(`${FILENAME}: package.json file copied!`);
+};
+
 options['scripts/make-server-configs.js'] = {
     callbacks: {
         any: () => {
@@ -307,5 +312,28 @@ options[CONSTANTS.SERVER__SRC_TEST_FOLDER] = {
         return /[sS]pec\.[a-zA-Z]+$/.test(fullNamePath);
     }
 };
+// const watch = require('node-watch');
+// const watcher = watch(`${ process.env.pwd }/coverage`, { recursive: true });
+// watcher.on('change', function(evt, name) {
+//     console.log('change', evt, name);
+// });
+// watcher.on('update', function(evt, name) {
+//     console.log('update', evt, name);
+// });
+// watcher.on('remove', function(evt, name) {
+//     console.log('remove', evt, name);
+// });
+// watcher.on('create', function(evt, name) {
+//     console.log('create', evt, name);
+// });
+// options[`${ process.env.pwd }/package.json`] = {
+//     callbacks: {
+//         create: () => { console.log('create')},//copyPackageJson,
+//         change: () => { console.log('change')},//copyPackageJson,
+//         delete: () => { console.log('delete')},
+//     },
+//     runImmediately: () => {console.log('imidiatly') }//copyPackageJson
+// };
+
 
 module.exports = options;

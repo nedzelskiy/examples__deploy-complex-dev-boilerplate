@@ -10,5 +10,5 @@ const server = http.createServer();
 const DEBUG = ((process.env as any).NODE_ENV === 'production') ? false : true;
 
 server.on('request', handleHttp).listen(SERVER__PORT, () => {
-	console.log(`Server is running on ${SERVER__URL} ${new Date()}`);
+    console.log(`Server is running on ${SERVER__URL} ${new Date()}`);
 });

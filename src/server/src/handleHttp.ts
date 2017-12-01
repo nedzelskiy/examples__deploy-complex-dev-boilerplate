@@ -27,15 +27,15 @@ const handleHttp = (req: any, res: any) => {
     res.setHeader('Content-Type', 'text/html');
     let cssClientHash, jsClientHash, cssServerHash, jsServerHash, fileName, hash;
     try {
-        fileName = 'client-bundle.css';
+        fileName = 'client-bundle.min.css';
         hash = md5File.sync(path.normalize(__dirname + `/client/${fileName}`));
         cssClientHash = hash;
 
-        fileName = 'client-bundle.js';
+        fileName = 'client-bundle.min.js';
         hash = md5File.sync(path.normalize(__dirname + `/client/${fileName}`));
         jsClientHash = hash;
 
-        fileName = 'server-styles.css';
+        fileName = 'server-styles.min.css';
         hash = md5File.sync(path.normalize(__dirname + `/assets/${fileName}`));
         cssServerHash = hash;
     } catch(err) {
