@@ -151,7 +151,6 @@ const copyFilesWithFilters = (to, from, options) => {
             },
             sourceMap: true
         });
-        fs.writeFileSync('11111.txt', JSON.stringify(res, null,4));
         if (res.error) {
             console.log(`${FILENAME}: Error while trying minify js file ${ fileName }.${ ext}! ${ JSON.stringify(res.error, null, 4)}`);
             return Promise.resolve();
