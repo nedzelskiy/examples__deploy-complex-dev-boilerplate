@@ -7,8 +7,7 @@
     "dev": "sh ./sh/dev.sh",
     "dev:server": "sh ./sh/server.sh",
     "test": "sh ./sh/tests.sh",
-    "coverage": "sh ./sh/coverage.sh",
-    "dev:server:compile": "node node_modules/typescript/bin/tsc -p configs/tsconfig-server.json"
+    "coverage": "sh ./sh/coverage.sh"
   },
   "repository": {
     "type": "git",
