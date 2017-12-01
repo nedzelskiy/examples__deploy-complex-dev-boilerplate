@@ -19,8 +19,23 @@ mock('mime', {
         return str;
     }
 });
+let params = {};
+mock('ejs', {
+    render: (str, param) => {
+        params = param;
+        return str;
+    }
+});
+
+let serverJSCounter = false;
 mock('md5-file', {
     sync: (str) => {
+        if (!!~str.indexOf('server-js.min.js')) {
+            if (serverJSCounter) {
+                throw Error();
+            }
+            serverJSCounter = true;
+        }
         return str;
     }
 });
@@ -41,9 +56,24 @@ const mockRes = {
     }
 };
 
+let consoleLogSave = console.log;
+
 describe(`${FILENAME}`, () => {
+    beforeAll(() => {
+        console.log = (str) => {
+            if (!~str.indexOf('server-js.min.js')) {
+                consoleLogSave(str);
+            }
+        };
+    });
+
+    afterAll(() => {
+        console.log = consoleLogSave;
+    });
+
     beforeEach(() => {
         mockRes.body = '';
+        params = {};
     });
 
     it(`should give index.ejs on url "/"`, next => {
@@ -66,6 +96,13 @@ describe(`${FILENAME}`, () => {
             url: '/file.404'
         }, mockRes);
         expect(mockRes.setStatus).to.be.equal(404);
+        next();
+    });
+    it(`should allows added static files without hash if couldn't find it` , next => {
+        handleHttp({
+            url: '/'
+        }, mockRes);
+        assert.isTrue(typeof params.jsServerHash === 'undefined');
         next();
     });
 });

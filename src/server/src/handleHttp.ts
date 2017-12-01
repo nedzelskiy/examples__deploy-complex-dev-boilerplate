@@ -45,14 +45,13 @@ const handleHttp = (req: any, res: any) => {
     } catch(err) {
         console.log(`SERVER ERROR: Can\'t find ${ fileName } for md5 hash!`);
     }
-
-    let html = ejs.render(fs.readFileSync(__dirname + '/index.ejs', 'utf-8').toString(), {
+    let html = ejs.render(fs.readFileSync(path.normalize(__dirname + '/index.ejs'), 'utf-8').toString(), {
         serverRenderText: makeResponseText(),
         title: 'Welcome to boilerplate',
-        cssClientHash: cssClientHash || 0,
-        jsClientHash: jsClientHash || 0,
-        cssServerHash: cssServerHash || 0,
-        jsServerHash: jsServerHash || 0
+        cssClientHash: cssClientHash,
+        jsClientHash: jsClientHash,
+        cssServerHash: cssServerHash,
+        jsServerHash: jsServerHash
     });
     res.end(html);
 };
