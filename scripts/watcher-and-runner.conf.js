@@ -276,8 +276,8 @@ const restartConcurrentlyWrapperProcess = (strCommand) => {
 };
 
 const copyPackageJson = (fullNamePath) => {
-    let file = fs.readFileSync(path.normalize(`${ process.env.pwd }/package.json`));
-    fse.outputFileSync(path.normalize(`${process.env.pwd}/${ CONSTANTS.SERVER__BUILD_FOLDER }/package.json`), file);
+    let file = fs.readFileSync(path.normalize(`${ process.env.PWD }/package.json`));
+    fse.outputFileSync(path.normalize(`${process.env.PWD}/${ CONSTANTS.SERVER__BUILD_FOLDER }/package.json`), file);
     console.log(`${FILENAME}: package.json file copied!`);
 };
 
@@ -372,7 +372,7 @@ options[CONSTANTS.SERVER__SRC_TEST_FOLDER] = {
     }
 };
 
-options[`${ process.env.pwd }/package.json`] = {
+options[`${ process.env.PWD }/package.json`] = {
     callbacks: {
         update: copyPackageJson,
         remove: copyPackageJson
