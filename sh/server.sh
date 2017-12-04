@@ -5,4 +5,4 @@ node ./scripts/concurrently-wrapper.js \
 "sh ./sh/watcher-and-runner.sh" \
 "sh ./sh/server-browser-restarter.sh" \
 "sh ./sh/server-livereload-proxy.sh" \
-"sh ./sh/ts-server.sh"
+"sh ./sh/ts-server-watch.sh"
