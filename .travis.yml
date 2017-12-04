@@ -10,3 +10,5 @@ install:
   - npm i jasmine
   - npm i mock-require
 script: npm run test
+after_script:
+  - echo DONE!
