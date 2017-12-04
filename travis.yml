@@ -1,0 +1,9 @@
+language: node_js
+node_js:
+  - 6
+script: npm run test
+before_script:
+  - eval `grep "^export " ./sh/env.sh`
+  - npm i jasmine
+  - npm i mock
+  - npm i chai

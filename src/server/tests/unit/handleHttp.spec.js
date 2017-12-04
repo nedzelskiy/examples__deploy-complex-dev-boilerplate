@@ -1,7 +1,6 @@
 'use strict';
 
 const path = require('path');
-const request = require('request');
 const mock = require('mock-require');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
