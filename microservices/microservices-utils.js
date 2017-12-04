@@ -4,16 +4,19 @@
 * Common code for all microservices
 */
 
+const fse = require("fs-extra");
 const chalkInstance = require('chalk');
 const chalk = new chalkInstance.constructor({enabled:true});
 
+let microservices = {};
+
 const utils = {
     sendConsoleText: function (text, level) {
-        const   color = this.color,
-                name = this.name,
-                port = this.port,
-                process = this.process;
-
+        const   color = this.color
+                ,name = this.name
+                ,port = this.port
+                ,process = this.process
+                ;
         let textColor = '',
             type = level || 'info';
 
@@ -26,6 +29,23 @@ const utils = {
             chalk[textColor](`[${ type }]:`),
             chalk[textColor](text)
         );
+        if (process.env.LOG_FOLDER) {
+            let d = (new Date()).toLocaleString("ru", {
+                day: 'numeric',
+                weekday: 'short',
+                month: 'long',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric'
+            });
+            if (microservices[name]) {
+                fse.appendFile(`${ process.env.LOG_FOLDER }/microservices/${name}.log`, `${ d }   ${ text }\r\n`);
+            } else {
+                fse.outputFileSync(`${ process.env.LOG_FOLDER }/microservices/${name}.log`, `${ d }   ${ text }\r\n`);
+                microservices[name] = name;
+            }
+        }
     },
     getChalkInstance: function() {
         return chalkInstance;

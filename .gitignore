@@ -5,4 +5,4 @@ build/
 coverage/
 configs/tsconfig-server.json
 configs/tsconfig-client.json
-
+log/microservices

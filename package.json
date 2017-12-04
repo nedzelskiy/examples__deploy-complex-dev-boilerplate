@@ -42,7 +42,7 @@
     "istanbul": "^0.4.5",
     "jasmine": "^2.8.0",
     "jpegtran-bin": "^3.2.0",
-    "js_console_command_executor": "^1.0.8",
+    "js_console_command_executor": "^1.0.9",
     "keypress": "^0.2.1",
     "md5-file": "^3.2.3",
     "mime": "^2.0.3",

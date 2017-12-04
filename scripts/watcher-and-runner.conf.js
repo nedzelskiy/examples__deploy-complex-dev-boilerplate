@@ -113,6 +113,8 @@ const copyFilesWithFilters = (to, from, options) => {
         ||  ext === 'jpeg'
         ||  ext === 'bmp'
         ||  ext === 'tiff'
+        ||  ext === 'jfif'
+        ||  ext === 'jpe'
     ) {
         return new Promise((resolve, reject) => {
             imagemin.buffer(file, {

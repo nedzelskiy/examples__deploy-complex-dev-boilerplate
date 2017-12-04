@@ -23,6 +23,8 @@ export SERVER_BROWSER_RESTARTER__URL="http://localhost:${SERVER_BROWSER_RESTARTE
 export CONCURRENTLY_WRAPPER__PORT=6600                                                                            &&
 
 export WATCHER_AND_RUNNER__PORT=6603                                                                              &&
-export WATCHER_AND_RUNNER__WAY_TO_CONFIG='scripts/watcher-and-runner.conf.js'
+export WATCHER_AND_RUNNER__WAY_TO_CONFIG='scripts/watcher-and-runner.conf.js'                                     &&
+
+export LOG_FOLDER='log'
 
 
