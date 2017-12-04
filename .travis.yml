@@ -1,9 +1,11 @@
 language: node_js
 node_js:
   - 6
-script: npm run test
-before_script:
+global:
+  - NODE_ENV=production
+install:
   - eval `grep "^export " ./sh/env.sh`
   - npm i jasmine
   - npm i mock
   - npm i chai
+script: npm run test
