@@ -5,7 +5,8 @@ global:
   - NODE_ENV=production
 install:
   - eval `grep "^export " ./sh/env.sh`
-  - npm i jasmine
   - npm i mock
   - npm i chai
+  - npm i jasmine
+  - npm i mock-require
 script: npm run test
