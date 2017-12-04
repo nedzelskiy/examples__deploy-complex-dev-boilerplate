@@ -1,7 +1,6 @@
 node_modules/
 .git
 .idea
-build/
 coverage/
 configs/tsconfig-server.json
 configs/tsconfig-client.json

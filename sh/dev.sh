@@ -1,5 +1,6 @@
 #!/bin/bash
 eval `grep "^export " ./sh/env.sh` && \
+sh ./sh/erase-build-files.sh && \
 node ./scripts/concurrently-wrapper.js \
 "sh ./sh/webpack-client.sh" \
 "sh ./sh/server-app-restarter.sh" \
