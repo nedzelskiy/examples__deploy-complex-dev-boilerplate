@@ -4365,7 +4365,7 @@ var mapDispatchToProps = function (dispatch) { return ({
     getCurrentDate: actions_1.getCurrentDate
 }); };
 var mapStateToProps = function (state) { return ({
-    message: 'And this is a counter for present React boilerplate!',
+    message: 'And this is a counter for React boilerplate presentation!',
     date: state.Root,
 }); };
 exports.default = react_redux_1.connect(mapStateToProps, mapDispatchToProps)(Root);
