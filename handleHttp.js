@@ -7,23 +7,23 @@ const path = require("path");
 const md5File = require("md5-file");
 const makeResponseText_1 = require("./modules/makeResponseText");
 const handleHttp = (req, res) => {
-    res.setStatus = 200;
     res.statusCode = 200;
-    if ('/' !== req.url) {
+    if ('/' !== req.url && typeof req.url !== 'undefined') {
         try {
-            let file = fs.readFileSync(`${path.normalize(__dirname + req.url.split('?')[0])}`), mimeType = mime.getType(`${path.normalize(__dirname + req.url.split('?')[0])}`);
-            res.setHeader('Content-Type', mimeType);
+            let url = req.url.toString().split('?')[0], file = fs.readFileSync(`${path.normalize(__dirname + url)}`), mimeType = mime.getType(`${path.normalize(__dirname + url)}`);
+            if (mimeType) {
+                res.setHeader('Content-Type', mimeType);
+            }
             res.end(file);
         }
         catch (err) {
-            res.setStatus = 404;
             res.statusCode = 404;
             res.end('Not found!');
         }
         return;
     }
     res.setHeader('Content-Type', 'text/html');
-    let cssClientHash, jsClientHash, cssServerHash, jsServerHash, fileName, hash;
+    let hash = 'undefined', fileName = 'undefined', jsServerHash = 'undefined', jsClientHash = 'undefined', cssClientHash = 'undefined', cssServerHash = 'undefined';
     try {
         fileName = 'client-bundle.min.css';
         hash = md5File.sync(path.normalize(__dirname + `/client/${fileName}`));
