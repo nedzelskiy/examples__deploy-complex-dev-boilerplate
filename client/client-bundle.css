@@ -3,9 +3,21 @@
   top: 5px;
   left: 0;
   margin-left: 0px; }
-.Counter button {
-  width: 70px;
-  margin: 5px;
-  height: 30px; }
+.Counter {
+  width: 370px;
+  max-width: 370px;
+  display: inline-block;
+  margin: 5px; }
+  .Counter button {
+    width: 70px;
+    margin: 5px;
+    height: 30px; }
+  .Counter .value {
+    text-align: center;
+    font-size: 16px;
+    display: inline-block;
+    width: 30px;
+    border: 1px dashed gray;
+    margin-left: 10px; }
 
 /*# sourceMappingURL=client-bundle.css.map*/

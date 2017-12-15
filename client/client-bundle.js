@@ -2787,15 +2787,32 @@ webpackContext.id = 15;
 
 "use strict";
 
+var __assign = (this && this.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var initialState = 0;
+var initialState = {
+    value: 0,
+    asyncTasks: 0
+};
 exports.default = function (state, action) {
     if (state === void 0) { state = initialState; }
     if (action.type === 'INCREMENT') {
-        return state + 1;
+        return __assign({}, state, { value: state.value + 1 });
     }
     else if (action.type === 'DECREMENT') {
-        return state - 1;
+        return __assign({}, state, { value: state.value - 1 });
+    }
+    else if (action.type === 'INCREMENT_ASYNC') {
+        return __assign({}, state, { asyncTasks: state.asyncTasks + 1 });
+    }
+    else if (action.type === 'DECREMENT_ASYNC') {
+        return __assign({}, state, { asyncTasks: state.asyncTasks - 1 });
     }
     return state;
 };
@@ -2803,44 +2820,18 @@ exports.default = function (state, action) {
 
 /***/ }),
 /* 17 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-var map = {
-	"./Root/src/reducer.ts": 18
-};
-function webpackContext(req) {
-	return __webpack_require__(webpackContextResolve(req));
-};
-function webpackContextResolve(req) {
-	var id = map[req];
-	if(!(id + 1)) // check for number or string
-		throw new Error("Cannot find module '" + req + "'.");
-	return id;
-};
-webpackContext.keys = function webpackContextKeys() {
-	return Object.keys(map);
-};
-webpackContext.resolve = webpackContextResolve;
-module.exports = webpackContext;
-webpackContext.id = 17;
+function webpackEmptyContext(req) {
+	throw new Error("Cannot find module '" + req + "'.");
+}
+webpackEmptyContext.keys = function() { return []; };
+webpackEmptyContext.resolve = webpackEmptyContext;
+module.exports = webpackEmptyContext;
+webpackEmptyContext.id = 17;
 
 /***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = function (state, action) {
-    if (state === void 0) { state = []; }
-    if (action.type === 'GET_CURRENT_DATE') {
-        return [new Date()];
-    }
-    return state;
-};
-
-
-/***/ }),
+/* 18 */,
 /* 19 */
 /***/ (function(module, exports) {
 
@@ -4209,34 +4200,60 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __assign = (this && this.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 __webpack_require__(26);
 var React = __webpack_require__(0);
 var react_redux_1 = __webpack_require__(5);
-var actions_1 = __webpack_require__(29);
 var src_1 = __webpack_require__(30);
+var actions_1 = __webpack_require__(37);
 var Root = (function (_super) {
     __extends(Root, _super);
     function Root() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     Root.prototype.render = function () {
-        var _a = this.props, message = _a.message, date = _a.date, getCurrentDate = _a.getCurrentDate;
+        var _this = this;
+        var message = this.props.message;
+        var counterProps = {};
+        var componentsPropsNames = [
+            'counter'
+        ];
+        var _loop_1 = function (prop) {
+            componentsPropsNames.forEach(function (componentPropsName) {
+                var replaceName = componentPropsName + "_";
+                if (new RegExp("^" + replaceName).test(prop)) {
+                    counterProps[prop.replace("" + replaceName, '')] = _this.props[prop];
+                }
+            });
+        };
+        for (var prop in this.props) {
+            _loop_1(prop);
+        }
         return (React.createElement("div", { className: this.constructor.name },
             React.createElement("img", { src: "assets/react.png" }),
             React.createElement("h4", null, message),
-            React.createElement("div", null, date.toString()),
-            React.createElement(src_1.default, { props: {} })));
+            React.createElement(src_1.default, __assign({}, counterProps))));
     };
     return Root;
-}(React.Component));
+}(React.PureComponent));
 exports.Root = Root;
 var mapDispatchToProps = {
-    getCurrentDate: actions_1.getCurrentDate
+    counter_increment: actions_1.increment,
+    counter_decrement: actions_1.decrement,
+    counter_incrementAsync: actions_1.incrementAsync,
+    counter_decrementAsync: actions_1.decrementAsync
 };
 var mapStateToProps = function (state) { return ({
     message: 'And this is a counter for React boilerplate presentation!',
-    date: state.Root,
+    counter_state: state.Counter
 }); };
 exports.default = react_redux_1.connect(mapStateToProps, mapDispatchToProps)(Root);
 
@@ -4378,18 +4395,7 @@ module.exports = invariant;
 
 
 /***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCurrentDate = function () { return function (dispatch) {
-    dispatch({ type: "GET_CURRENT_DATE" });
-}; };
-
-
-/***/ }),
+/* 29 */,
 /* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -4414,12 +4420,14 @@ var Counter = (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     Counter.prototype.render = function () {
-        var _a = this.props, increment = _a.increment, incrementAsync = _a.incrementAsync, decrement = _a.decrement, decrementAsync = _a.decrementAsync;
+        var _a = this.props, increment = _a.increment, incrementAsync = _a.incrementAsync, decrement = _a.decrement, decrementAsync = _a.decrementAsync, state = _a.state;
         return (React.createElement("div", { className: this.constructor.name },
-            React.createElement("button", { onClick: increment, className: "increment" }, "+"),
-            React.createElement("button", { onClick: incrementAsync, className: "incrementAsync" }, "+ (\u221E)"),
-            React.createElement("button", { onClick: decrement, className: "decrement" }, "\u2212"),
-            React.createElement("button", { onClick: decrementAsync, className: "decrementAsync" }, "\u2212 (\u221E)")));
+            React.createElement("button", { onClick: increment }, '+'),
+            React.createElement("button", { onClick: incrementAsync }, '+ (∞)'),
+            React.createElement("button", { onClick: decrement }, '–'),
+            React.createElement("button", { onClick: decrementAsync }, '- (∞)'),
+            React.createElement("div", { className: "value" }, state.value),
+            React.createElement("div", null, "Async tasks in queue: " + state.asyncTasks)));
     };
     return Counter;
 }(React.PureComponent));
@@ -4431,6 +4439,40 @@ exports.default = Counter;
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 32 */,
+/* 33 */,
+/* 34 */,
+/* 35 */,
+/* 36 */,
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.increment = function () { return function (dispatch) {
+    dispatch({ type: 'INCREMENT' });
+}; };
+exports.decrement = function () { return function (dispatch) {
+    dispatch({ type: 'DECREMENT' });
+}; };
+exports.incrementAsync = function () { return function (dispatch) {
+    dispatch({ type: 'INCREMENT_ASYNC' });
+    setTimeout(function () {
+        dispatch({ type: 'INCREMENT' });
+        dispatch({ type: 'DECREMENT_ASYNC' });
+    }, Math.floor(Math.random() * (5000 - 200 + 1)) + 200);
+}; };
+exports.decrementAsync = function () { return function (dispatch) {
+    dispatch({ type: 'INCREMENT_ASYNC' });
+    setTimeout(function () {
+        dispatch({ type: 'DECREMENT' });
+        dispatch({ type: 'DECREMENT_ASYNC' });
+    }, Math.floor(Math.random() * (5000 - 200 + 1)) + 200);
+}; };
+
 
 /***/ })
 /******/ ]);
